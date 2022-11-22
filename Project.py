@@ -1,81 +1,58 @@
-import numpy as np
+import ibapi
+from ibapi.client import EClient
+from ibapi.wrapper import EWrapper
+from ibapi.contract import Contract
+from ibapi.order import *
+#
+import threading
+import time
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
+#Vars
 
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure
+# Class for IB Connection
+class IBApi(EWrapper, EClient):
+    def __init__(self):
+        EClient.__init__(self, self)
+    # Listen for realtime bars
+    def realtimeBar(self, reqID, time, open_, high, low, close, volume, wap, count):
+        super().realtimeBar(reqID, time, open_, high, low, close, volume, wap, count)
+        try:
+            bot.on_bar_update(reqID, time, open_, high, low, close, volume, wap, count)
+        except Exception as e:
+            print(e)
+    def error(self, id, errorCode, errorMsg):
+        print(errorCode)
+        print(errorMsg)
 
-from alpha_vantage.timeseries import TimeSeries 
+# Bot logic
+class Bot:
+    ib = None
+    def __init__(self):
+        # Connect to IB on init
+        self.ib = IBApi()
+        self.ib.connect("127.0.0.1", 7496,1)
+        ib_thread = threading.Thread(target=self.run_loop, daemon=True)
+        ib_thread.start()
+        time.sleep(1) # pause application for a second, to allow some auto messages to piss off.
+        # Get symbol info
+        symbol = input("Enter the symbol you want to trade: ")
+        
+        # Create the IB Contract Object
+        contract = Contract()
+        contract.symbol = symbol.upper #symbols need to be in uppercase 
+        contract.secType = "STK" # type for useAM is Stocks
+        contract.exchange = "SMART" # which exchange to use?
+        contract.currency = "USD"
 
-print("All libraries loaded")
+        # Request real time market data
+        self.ib.reqRealTimeBars(0, contract, 5, "TRADES", 1, [])
 
-config = {
-    "alpha_vantage": {
-        "key": "demo", # you can use the demo API key for this project, but please make sure to get your own API key at https://www.alphavantage.co/support/#api-key
-        "symbol": "IBM",
-        "outputsize": "full",
-        "key_adjusted_close": "5. adjusted close",
-    },
-    "data": {
-        "window_size": 20,
-        "train_split_size": 0.80,
-    }, 
-    "plots": {
-        "xticks_interval": 90, # show a date every 90 days
-        "color_actual": "#001f3f",
-        "color_train": "#3D9970",
-        "color_val": "#0074D9",
-        "color_pred_train": "#3D9970",
-        "color_pred_val": "#0074D9",
-        "color_pred_test": "#FF4136",
-    },
-    "model": {
-        "input_size": 1, # since we are only using 1 feature, close price
-        "num_lstm_layers": 2,
-        "lstm_size": 32,
-        "dropout": 0.2,
-    },
-    "training": {
-        "device": "cpu", # "cuda" or "cpu"
-        "batch_size": 64,
-        "num_epoch": 100,
-        "learning_rate": 0.01,
-        "scheduler_step_size": 40,
-    }
-}
+    # Listen for socket in seperate thread
+    def run_loop(self):
+        self.ib.run()
+    # Pass realtime bar data back to our bot oject
+    def on_bar_update(self, reqID, time, open_, high, low, close, volume, wap, count):
+        print(close)
 
-def download_data(config):
-    ts = TimeSeries(key='JM953PGFMNQSSGSZ') #you can use the demo API key for this project, but please make sure to eventually get your own API key at https://www.alphavantage.co/support/#api-key. 
-    data, meta_data = ts.get_daily_adjusted(config["alpha_vantage"]["symbol"], outputsize=config["alpha_vantage"]["outputsize"])
-
-    data_date = [date for date in data.keys()]
-    data_date.reverse()
-
-    data_close_price = [float(data[date][config["alpha_vantage"]["key_adjusted_close"]]) for date in data.keys()]
-    data_close_price.reverse()
-    data_close_price = np.array(data_close_price)
-
-    num_data_points = len(data_date)
-    display_date_range = "from " + data_date[0] + " to " + data_date[num_data_points-1]
-    print("Number data points", num_data_points, display_date_range)
-
-    return data_date, data_close_price, num_data_points, display_date_range
-
-data_date, data_close_price, num_data_points, display_date_range = download_data(config)
-
-# plot
-
-fig = figure(figsize=(25, 5), dpi=80)
-fig.patch.set_facecolor((1.0, 1.0, 1.0))
-plt.plot(data_date, data_close_price, color=config["plots"]["color_actual"])
-xticks = [data_date[i] if ((i%config["plots"]["xticks_interval"]==0 and (num_data_points-i) > config["plots"]["xticks_interval"]) or i==num_data_points-1) else None for i in range(num_data_points)] # make x ticks nice
-x = np.arange(0,len(xticks))
-plt.xticks(x, xticks, rotation='vertical')
-plt.title("Daily close price for " + config["alpha_vantage"]["symbol"] + ", " + display_date_range)
-plt.grid(b=None, which='major', axis='y', linestyle='--')
-plt.show()
+# Start Bot
+bot = Bot()
