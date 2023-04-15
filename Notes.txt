@@ -1,0 +1,15 @@
+[indicators]
+Machine Learning: kNN-based Strategy (capissimo)
+Machine Learning: Lorentzian Classification (jdehorty)
+Machine Learning: Logistic Regression (capissimo)
+
+[Moving Average Ribbon]
+EMA Ribbon (domenicosille...)
+EMA Ribbon [Krypt] (fskrypt)
+EMA Ribbon for BO (John Mann1)
+
+
+[Relitive Strength Index] 
+Heikin Ashi RSI Oscillator (JayRogers)
+RSI+ (D7R)
+RSI HistoAlert Strategy (HPotter)
