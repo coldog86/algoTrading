@@ -1,2 +1,0 @@
-Alpha Vantage! API key is: 
-JM953PGFMNQSSGSZ
