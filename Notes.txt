@@ -1,55 +1,53 @@
-[indicators]
-Machine Learning: kNN-based Strategy (capissimo)
-Machine Learning: Lorentzian Classification (jdehorty)
-Machine Learning: Logistic Regression (capissimo)
+[Downloads]
+  [indicators]
+    Machine Learning: kNN-based Strategy (capissimo)
+    Machine Learning: Lorentzian Classification (jdehorty)
+    Machine Learning: Logistic Regression (capissimo)
 
-[Moving Average Ribbon]
-EMA Ribbon (domenicosille...)
-EMA Ribbon [Krypt] (fskrypt)
-EMA Ribbon for BO (John Mann1)
+  [Moving Average Ribbon]
+    EMA Ribbon (domenicosille...)
+    EMA Ribbon [Krypt] (fskrypt)
+    EMA Ribbon for BO (John Mann1)
 
-
-[Relitive Strength Index] 
-Heikin Ashi RSI Oscillator (JayRogers)
-RSI+ (D7R)
-RSI HistoAlert Strategy (HPotter)
+  [Relitive Strength Index] 
+    Heikin Ashi RSI Oscillator (JayRogers)
+    RSI+ (D7R)
+    RSI HistoAlert Strategy (HPotter)
 
 [How to do Walk Forward Optimisation]
-new > stratergy optimiser 
-stratergy optimiser > General > backtesttype = walkForward
-stratergy optimiser > General > Stratergy > GapReversal
+  new > stratergy optimiser 
+  stratergy optimiser > General > backtesttype = walkForward
+  stratergy optimiser > General > Stratergy > GapReversal
   Instructions are in the code
   
- 
- [Golden Cross]
-Golden Cross is when the 50 day moving average crosses above the 200 day moving average.
-This means the recent average price is higher then it's long term average price and tends to mean a bullish market.
+[Definitions]
+  [Golden Cross]
+    Golden Cross is when the 50 day moving average crosses above the 200 day moving average.
+    This means the recent average price is higher then it's long term average price and tends to mean a bullish market.
 
-[Death Cross]
-Oposit of Golden Cross. 
-When the 50 day moving average crosses below the 200 day moving average.
+  [Death Cross]
+    Oposit of Golden Cross. 
+    When the 50 day moving average crosses below the 200 day moving average.
 
-[Whip saw]
-Quick back and forths between up and down swings. 
-Using smaller numbers as your moving averages when looking for Golden or Death Crosses. 
+  [Whip saw]
+    Quick back and forths between up and down swings. 
+    Using smaller numbers as your moving averages when looking for Golden or Death Crosses. 
 
+  [Relative Strength Index]
+    An indicator used to measure a stock's momentum (speed and size of the price changes).
+    Can be used to determin if a stock is OverBought or OverSold. 
+        RS = Avg Gains / Avg Losses
 
-[Relative Strength Index]
-An indicator used to measure a stock's momentum (speed and size of the price changes).
-Can be used to determin if a stock is OverBought or OverSold. 
+  [OverBought]
+    Has increased rapidly in a short period of time and may see a reversal.
+    Often an RSI of 70+ is considered OverBought.
 
-RS = Avg Gains / Avg Losses
+  [OverSold]
+    Has decreased rapidly in a short period of time and may see a reversal.
+    Often an RSI of -30 is considered OverSold.
 
-[OverBought]
-Has increased rapidly in a short period of time and may see a reversal.
-Often an RSI of 70+ is considered OverBought.
-
-[OverSold]
-Has decreased rapidly in a short period of time and may see a reversal.
-Often an RSI of -30 is considered OverSold.
-
-[Divergence]
-A Divergence occurs when a stock's price moves one way and it's RSI moves the oposit direction. 
+  [Divergence]
+    A Divergence occurs when a stock's price moves one way and it's RSI moves the oposit direction. 
 
 
 
