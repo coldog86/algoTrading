@@ -13,3 +13,10 @@ EMA Ribbon for BO (John Mann1)
 Heikin Ashi RSI Oscillator (JayRogers)
 RSI+ (D7R)
 RSI HistoAlert Strategy (HPotter)
+
+[How to do Walk Forward Optimisation]
+new > stratergy optimiser 
+stratergy optimiser > General > backtesttype = walkForward
+stratergy optimiser > General > Stratergy > GapReversal
+
+Instructions are in the code
