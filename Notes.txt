@@ -18,5 +18,38 @@ RSI HistoAlert Strategy (HPotter)
 new > stratergy optimiser 
 stratergy optimiser > General > backtesttype = walkForward
 stratergy optimiser > General > Stratergy > GapReversal
+  Instructions are in the code
+  
+ 
+ [Golden Cross]
+Golden Cross is when the 50 day moving average crosses above the 200 day moving average.
+This means the recent average price is higher then it's long term average price and tends to mean a bullish market.
 
-Instructions are in the code
+[Death Cross]
+Oposit of Golden Cross. 
+When the 50 day moving average crosses below the 200 day moving average.
+
+[Whip saw]
+Quick back and forths between up and down swings. 
+Using smaller numbers as your moving averages when looking for Golden or Death Crosses. 
+
+
+[Relative Strength Index]
+An indicator used to measure a stock's momentum (speed and size of the price changes).
+Can be used to determin if a stock is OverBought or OverSold. 
+
+RS = Avg Gains / Avg Losses
+
+[OverBought]
+Has increased rapidly in a short period of time and may see a reversal.
+Often an RSI of 70+ is considered OverBought.
+
+[OverSold]
+Has decreased rapidly in a short period of time and may see a reversal.
+Often an RSI of -30 is considered OverSold.
+
+[Divergence]
+A Divergence occurs when a stock's price moves one way and it's RSI moves the oposit direction. 
+
+
+
