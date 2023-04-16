@@ -14,10 +14,10 @@
     RSI+ (D7R)
     RSI HistoAlert Strategy (HPotter)
 
-[How to do Walk Forward Optimisation]
-  new > stratergy optimiser 
-  stratergy optimiser > General > backtesttype = walkForward
-  stratergy optimiser > General > Stratergy > GapReversal
+[How to do Walk Forward Optimization]
+  new > Stratergy Analyzer 
+  Stratergy Analyzer > General > backtesttype = walkForward
+  Stratergy Analyzer > General > Stratergy > GapReversal
   Instructions are in the code
   
 [Definitions]
