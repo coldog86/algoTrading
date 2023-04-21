@@ -52,5 +52,6 @@
 [EMA vs SMA]
 Exponential Moving Average (EMA) is similar to Simple Moving Average (SMA), measuring trend direction over a period of time. However, whereas SMA simply calculates an average of price data, EMA applies more weight to data that is more current.
 Since EMAs place a higher weighting on recent data than on older data, they are more reactive to the latest price changes than SMAs are, which makes the results from EMAs more timely and explains why the EMA is the preferred average among many traders.
+(graphic showing this can be seen here - https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/ema)
 
 
