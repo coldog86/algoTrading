@@ -48,6 +48,9 @@
 
   [Divergence]
     A Divergence occurs when a stock's price moves one way and it's RSI moves the oposit direction. 
-
+    
+[EMA vs SMA]
+Exponential Moving Average (EMA) is similar to Simple Moving Average (SMA), measuring trend direction over a period of time. However, whereas SMA simply calculates an average of price data, EMA applies more weight to data that is more current.
+Since EMAs place a higher weighting on recent data than on older data, they are more reactive to the latest price changes than SMAs are, which makes the results from EMAs more timely and explains why the EMA is the preferred average among many traders.
 
 
