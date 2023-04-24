@@ -48,7 +48,7 @@ Since EMAs place a higher weighting on recent data than on older data, they are 
 [Machine Learning Defintions]
   [kNN]
   
+  [Volume Weighted Average Price (VWAP]
   
-
-Commonly used trade execution algorithms are Volume Weighted Average Price (VWAP), Time Weighted Average Price (TWAP), and Percent of Value (PoV)
+  [Percent of Value (PoV)]
 
