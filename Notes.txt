@@ -1,18 +1,3 @@
-[Downloads]
-  [indicators]
-    Machine Learning: kNN-based Strategy (capissimo)
-    Machine Learning: Lorentzian Classification (jdehorty)
-    Machine Learning: Logistic Regression (capissimo)
-
-  [Moving Average Ribbon]
-    EMA Ribbon (domenicosille...)
-    EMA Ribbon [Krypt] (fskrypt)
-    EMA Ribbon for BO (John Mann1)
-
-  [Relitive Strength Index] 
-    Heikin Ashi RSI Oscillator (JayRogers)
-    RSI+ (D7R)
-    RSI HistoAlert Strategy (HPotter)
 
 [How to do Walk Forward Optimization]
   new > Stratergy Analyzer 
@@ -20,7 +5,7 @@
   Stratergy Analyzer > General > Stratergy > GapReversal
   Instructions are in the code
   
-[Definitions]
+[Definitions of Trading Terms]
   [Golden Cross]
     Golden Cross is when the 50 day moving average crosses above the 200 day moving average.
     This means the recent average price is higher then it's long term average price and tends to mean a bullish market.
@@ -54,4 +39,16 @@ Exponential Moving Average (EMA) is similar to Simple Moving Average (SMA), meas
 Since EMAs place a higher weighting on recent data than on older data, they are more reactive to the latest price changes than SMAs are, which makes the results from EMAs more timely and explains why the EMA is the preferred average among many traders.
 (graphic showing this can be seen here - https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/ema)
 
+
+[Stratery01]
+1. using kNN indicator
+2. buy and sell based on SMA (50,200) crosses
+3. on a 15min chart cross must preceed marker by < 48hrs
+
+[Machine Learning Defintions]
+  [kNN]
+  
+  
+
+Commonly used trade execution algorithms are Volume Weighted Average Price (VWAP), Time Weighted Average Price (TWAP), and Percent of Value (PoV)
 
