@@ -1,3 +1,9 @@
+[To Learn]
+  [Price indicators]
+    Head and shoulder
+    Cup and handle
+
+
 
 [How to do Walk Forward Optimization]
   new > Stratergy Analyzer 
@@ -43,7 +49,15 @@ Since EMAs place a higher weighting on recent data than on older data, they are 
 [Stratery01]
 1. using kNN indicator
 2. buy and sell based on SMA (50,200) crosses
-3. on a 15min chart cross must preceed marker by < 48hrs
+3. ~~~ on a 15min chart cross must preceed marker by < 48hrs
+
+[Simple System for the S&P 500 (30min)]
+Long Entry: Buy if the current price minus the open of the bar 8 bars back is greater than the range of the bar 8 bars back.
+Short Entry: Sell Short if the current price minus the close of the bar 8 bars is greater than the range of the bar 8 bars back.
+Stop Long: $500 per contract
+Stop Short: $1700 per contract
+Time Exit: Exit after one 30-minute bar.
+
 
 [Machine Learning Defintions]
   [kNN]
@@ -51,4 +65,5 @@ Since EMAs place a higher weighting on recent data than on older data, they are 
   [Volume Weighted Average Price (VWAP]
   
   [Percent of Value (PoV)]
+
 
