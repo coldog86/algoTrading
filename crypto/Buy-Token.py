@@ -60,7 +60,7 @@ if "engine_result" in signed_tx.result:
         pays = signed_tx.result['tx_json']['TakerPays']['value']
 
         xrp_value = int(gets) / 1_000_000
-        buy_price = xrp_value / float(pays)
+        buy_price = float(pays) / xrp_value
 
         print(f"BuyPrice = {buy_price:.12f}")
         
