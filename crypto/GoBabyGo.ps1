@@ -1,4 +1,4 @@
-﻿[Parameter(Mandatory = $false)][int] $WaitTime
+[Parameter(Mandatory = $false)][int] $WaitTime
 [Parameter(Mandatory = $false)][int] $Count
 
 if($null -eq $waitTime){
