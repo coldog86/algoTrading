@@ -5,6 +5,8 @@ from xrpl.models.transactions import OfferCreate
 from xrpl.models.amounts import IssuedCurrencyAmount
 from xrpl.transaction import sign_and_submit
 import argparse
+import math
+
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="Sell a token for XRP on the XRP Ledger.")
@@ -29,10 +31,24 @@ SELL_AMOUNT = str(args.SELL_AMOUNT)
 XRP_PRICE_PER_TOKEN = args.XRP_PRICE_PER_TOKEN
 XRP_PRICE_IN_DROPS = float(XRP_PRICE_PER_TOKEN * 1_000_000)
 
+
+# Check for NaN and invalid values
+if math.isnan(XRP_PRICE_IN_DROPS) or math.isnan(float(SELL_AMOUNT)):
+    raise ValueError("XRP_PRICE_IN_DROPS or SELL_AMOUNT is NaN or invalid")
+
+# Ensure both values are numeric and proceed
+try:
+    XRP_PRICE_IN_DROPS = float(XRP_PRICE_IN_DROPS)  # Ensure it's a float
+    SELL_AMOUNT = float(SELL_AMOUNT)  # Ensure it's a float
+      
+    # Calculate total XRP in drops
+    taker_pays = str(int(XRP_PRICE_IN_DROPS * SELL_AMOUNT))
+    print(f"Taker pays: {taker_pays} drops")
+except ValueError as e:
+    print(f"Error: {e}")
+
 # Define taker_pays as the amount of XRP you expect to receive
 taker_pays = str(int(XRP_PRICE_IN_DROPS * float(SELL_AMOUNT)))  # Total XRP in drops
-
-
 
 # Define taker_pays as an IssuedCurrencyAmount
 taker_gets = IssuedCurrencyAmount(
