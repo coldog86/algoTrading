@@ -33,12 +33,19 @@ function Create-Doco(){
 
 function Create-FolderStructure(){
 
-    mkdir config
-    mkdir config\default
-    mkdir Doco
-    mkdir Log
-    mkdir Scripts
-    mkdir temp
+    $folders = @("config", "config\default", "Doco", "Log", "Scripts", "temp")
+    
+    foreach ($folder in $folders){
+        $folderPath = ".\$folder"
+        # Check if the folder exists
+        if (!(Test-Path -Path $folderPath)) {
+            # Create the folder if it does not exist
+            New-Item -ItemType Directory -Path $folderPath -Force
+            Write-Output "Folder created: $folderPath"
+        } else {
+            Write-Output "Folder already exists: $folderPath"
+        }
+    }    
 }
 
 function Set-WalletAddress(){
