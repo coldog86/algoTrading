@@ -4,29 +4,14 @@
 function init(){
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "CryptoModule.psm1"
     Import-Module .\CryptoModule.psm1 -Force
+    # Create folders and files
     Create-FolderStructure
-    New-Item -Path .\config -Name config.txt # create blank config file
-    Create-Defaults # create stops and buy conditions etc
-    $useDefaults = Read-Host "Use default stops and buy conditions as active config (this will over write any custom config) (y/n)"
-    if($adminTelegramGroup -eq 'y'){
-    
-    $walletAddress = Read-Host "Please enter wallet address (it will look something like this 'rDXgW8ZdcPwmSzEzK7s45V6xeSwuwgiVYG')"
-    Set-WalletAddress -WalletAddress $walletAddress
-    $secretNumbers = Read-Host "Please enter wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')"
-    Set-WalletSecret -SecretNumbers $secretNumbers
-    $userTelegramGroup = Read-Host "Please enter the name of the Telegram group you added the bot to" 
-    Set-UserTelegramGroup -UserTelegramGroup $userTelegramGroup
-    $adminTelegramGroup = Read-Host "Use default for admin telegram group? (y/n)"
-    if($adminTelegramGroup -eq 'n'){
-        $adminTelegramGroup = Read-Host "Please enter the name of the admin Telegram group"
-        Set-UserTelegramGroup -UserTelegramGroup $userTelegramGroup
-    }    
     Create-PythonScripts
     Create-GoBabyGoScript
+    Create-DefaultConfigs -Branch 'Beta' -FileName 'stops.csv'
+    Create-DefaultConfigs -Branch 'Beta' -FileName 'buyConditions.csv'
 }
-Create-Defaults -Branch 'Beta' -FileName 'stops.csv'
-Create-Defaults -Branch 'Beta' -FileName 'buyConditions.csv'
-function Create-Defaults(){
+function Create-DefaultConfigs(){
     param (
         [Parameter(Mandatory = $false)][string] $Branch = 'main',
         [Parameter(Mandatory = $true)][string] $FileName
@@ -34,6 +19,16 @@ function Create-Defaults(){
     Write-Host "Creating default configs"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
 }
+
+function Create-Doco(){
+    param (
+        [Parameter(Mandatory = $false)][string] $Branch = 'main',
+        [Parameter(Mandatory = $true)][string] $FileName
+    )
+    Write-Host "Creating default configs"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
+}
+
 function Create-FolderStructure(){
 
     mkdir config
@@ -803,9 +798,8 @@ function Check-BuyTime {
 function Get-TokenBalance(){
     Param
     (
-        [Parameter(Mandatory = $false)][string] $WalletAddress = "rDXgW8ZdcPwmSzEzK7s45V6xeSwuwgiVYG",
-        [Parameter(Mandatory = $false)][string] $TokenCode = "",
-        [Parameter(Mandatory = $false)][string] $TokenName = "",
+        [Parameter(Mandatory = $true)][string] $WalletAddress,
+        [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $false)][switch] $Silent
 
     )
@@ -1946,8 +1940,8 @@ function Monitor-Alerts(){
                     Write-host "starting new shell"
                     $chat = Get-TelegramChat -TelegramToken $telegramToken
                     $count = $chat.update_id.count
-                    GoBabyGo
-                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\scripts\GoBabyGo.ps1", "-Count", "$count"
+                    
+                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\scripts\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
 
                     # Send alert
                     Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "New token - $($tokenName)"
