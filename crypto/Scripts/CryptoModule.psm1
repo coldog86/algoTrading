@@ -10,13 +10,15 @@ function init(){
     Create-GoBabyGoScript
     Create-DefaultConfigs -Branch 'Beta' -FileName 'stops.csv'
     Create-DefaultConfigs -Branch 'Beta' -FileName 'buyConditions.csv'
+    Create-Doco -Branch 'Beta' -FileName 'ReadMe.txt'
+    Create-Doco -Branch 'Beta' -FileName 'RoadMap.txt'
 }
 function Create-DefaultConfigs(){
     param (
         [Parameter(Mandatory = $false)][string] $Branch = 'main',
         [Parameter(Mandatory = $true)][string] $FileName
     )
-    Write-Host "Creating default configs"
+    Write-Host "Creating default configs ($($fileName))"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
 }
 
@@ -25,8 +27,8 @@ function Create-Doco(){
         [Parameter(Mandatory = $false)][string] $Branch = 'main',
         [Parameter(Mandatory = $true)][string] $FileName
     )
-    Write-Host "Creating default configs"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
+    Write-Host "Creating $($fileName) file"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "config\default\$($fileName)"   
 }
 
 function Create-FolderStructure(){

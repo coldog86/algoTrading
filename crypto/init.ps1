@@ -9,6 +9,8 @@ Create-GoBabyGoScript
 New-Item -Path .\config -Name config.txt # create blank config file    
 Create-DefaultConfigs -Branch 'Beta' -FileName 'stops.csv'
 Create-DefaultConfigs -Branch 'Beta' -FileName 'buyConditions.csv'
+Create-Doco -Branch 'Beta' -FileName 'ReadMe.txt'
+Create-Doco -Branch 'Beta' -FileName 'RoadMap.txt'
 $useDefaultConfigs = Read-Host "Use default stops and buy conditions as active config (this will over write any custom config) (y/n)"
 if($useDefaultConfigs -eq 'y'){
     Get-ChildItem -Path .\config\default | Copy-Item -Destination .\config
