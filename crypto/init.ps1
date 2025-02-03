@@ -37,3 +37,5 @@ function setupBot(){
     Create-PythonScripts
     Create-GoBabyGoScript
 }
+
+setupBot
