@@ -28,7 +28,7 @@ function Create-Doco(){
         [Parameter(Mandatory = $true)][string] $FileName
     )
     Write-Host "Creating $($fileName) file"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "config\default\$($fileName)"   
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "Doco\$($fileName)"   
 }
 
 function Create-FolderStructure(){
@@ -293,7 +293,6 @@ function Get-WalletSecret {
     try {
         $bytes = [Convert]::FromBase64String($encodedSecret)
         $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
-        Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
     }
@@ -608,7 +607,6 @@ else:
     # Save the script to a temporary file
     $tempScript = ".\scripts\Create-TrustLine.py"
     $pythonCode | Set-Content -Path $tempScript
-
 }
 
 function Create-RemoveTrustLineScript(){
