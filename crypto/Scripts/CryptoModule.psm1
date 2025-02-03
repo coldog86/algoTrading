@@ -2,8 +2,8 @@
 
 
 function init(){
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "CryptoModule.psm1"
-    Import-Module .\CryptoModule.psm1 -Force
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "scrips\CryptoModule.psm1"
+    Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
     # Create folders and files
     Create-FolderStructure
     Create-PythonScripts
@@ -33,12 +33,19 @@ function Create-Doco(){
 
 function Create-FolderStructure(){
 
-    mkdir config
-    mkdir config\default
-    mkdir Doco
-    mkdir Log
-    mkdir Scripts
-    mkdir temp
+    $folders = @("config", "config\default", "Doco", "Log", "Scripts", "temp")
+    
+    foreach ($folder in $folders){
+        $folderPath = ".\$folder"
+        # Check if the folder exists
+        if (!(Test-Path -Path $folderPath)) {
+            # Create the folder if it does not exist
+            New-Item -ItemType Directory -Path $folderPath -Force
+            Write-Output "Folder created: $folderPath"
+        } else {
+            Write-Output "Folder already exists: $folderPath"
+        }
+    }    
 }
 
 function Set-WalletAddress(){
@@ -674,29 +681,36 @@ function Create-GoBabyGoScript(){
     Write-Host "Creating GoBabyGo script" -ForegroundColor Magenta
     
     $script = @"
-[Parameter(Mandatory = $false)][int] $WaitTime
-[Parameter(Mandatory = $false)][int] $Count
+[Parameter(Mandatory = $false)][int] $WaitTime = 600
+[Parameter(Mandatory = $false)][int] $Count = 0
+[Parameter(Mandatory = $false)][string] $Username = "coldog86"
+[Parameter(Mandatory = $false)][string] $Repo = 'algoTrading'
+[Parameter(Mandatory = $false)][string] $Branch = 'Beta'
+[Parameter(Mandatory = $false)][string] $Folder = 'crypto/Scripts'
+[Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
+[Parameter(Mandatory = $false)][switch] $ignoreInit
 
-if($null -eq $waitTime){
-    $waitTime = 600
-} 
-if($null -eq $count){
-    $count = 0
-} 
+#Write-Host "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
+Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
-Import-Module '.\scripts\CryptoModule.psm1' -Force -WarningAction Ignore
 $telegramToken = Get-TelegramToken
-Write-Host "Count = $($count)"
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
+if(!$ignoreInit){
+    init
+}
 
 $chat = Get-TelegramChat -TelegramToken $telegramToken
             $count = $chat.update_id.count
             Write-Host "count == $($count)"
+
+
+            
 "@
 
     # Save the script to a temporary file
-    $tempScript = ".\scripts\GoBabyGo.ps1"
+    $tempScript = ".\GoBabyGo.ps1"
     $script | Set-Content -Path $tempScript
 
 }

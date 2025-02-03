@@ -25,15 +25,11 @@ function setupBot(){
     Set-WalletSecret -SecretNumbers $secretNumbers
     $userTelegramGroup = Read-Host "Please enter the name of the Telegram group you added the bot to" 
     Set-UserTelegramGroup -UserTelegramGroup $userTelegramGroup
-    $adminTelegramGroup = Read-Host "Use default for admin telegram group? (y/n)"
-    if($adminTelegramGroup -eq 'n'){
-        $adminTelegramGroup = Read-Host "Please enter the name of the admin Telegram group"
-        Set-UserTelegramGroup -UserTelegramGroup $userTelegramGroup
-    } else {
-        Set-UserTelegramGroup -UserTelegramGroup @testgroupjbn121
-    }    
-
+    Set-AdminTelegramGroup -UserTelegramGroup @testgroupjbn121
+        
     # create scripts
     Create-PythonScripts
     Create-GoBabyGoScript
 }
+
+setupBot
