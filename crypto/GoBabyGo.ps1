@@ -1,19 +1,27 @@
-[Parameter(Mandatory = False)][int] 
-[Parameter(Mandatory = False)][int] 
+[Parameter(Mandatory = $false)][int] $WaitTime = 600
+[Parameter(Mandatory = $false)][int] $Count = 0
+[Parameter(Mandatory = $false)][string] $Username = "coldog86"
+[Parameter(Mandatory = $false)][string] $Repo = 'algoTrading'
+[Parameter(Mandatory = $false)][string] $Branch = 'Beta'
+[Parameter(Mandatory = $false)][string] $Folder = 'crypto/Scripts'
+[Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
+[Parameter(Mandatory = $false)][switch] $ignoreInit
 
-if( -eq ){
-     = 600
-} 
-if( -eq ){
-     = 0
-} 
+#Write-Host "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
+Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
-Import-Module '.\scripts\CryptoModule.psm1' -Force -WarningAction Ignore
- = Get-TelegramToken
-Write-Host "Count = "
-Monitor-Alerts -TelegramToken  -WaitTime  -Silent -count 
+$telegramToken = Get-TelegramToken
+Write-Host "Count = $($count)"
+Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
+
+if(!$ignoreInit){
+    init
+}
+
+$chat = Get-TelegramChat -TelegramToken $telegramToken
+            $count = $chat.update_id.count
+            Write-Host "count == $($count)"
 
 
- = Get-TelegramChat -TelegramToken 
-             = .update_id.count
-            Write-Host "count == "
+            
