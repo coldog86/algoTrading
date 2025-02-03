@@ -23,4 +23,15 @@ $count = $chat.update_id.count
 Write-Host "count == $($count)"
 
 
-            
+<#            
+$Username = "coldog86"
+$Repo = 'algoTrading'
+$Branch = 'Beta'
+$Folder = 'crypto/Scripts'
+$FileName = 'CryptoModule.psm1'
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
+Import-Module .\scripts\$fileName -Force -WarningAction Ignore
+
+$telegramToken = Get-TelegramToken
+
+#>
