@@ -2,8 +2,8 @@
 
 
 function init(){
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "CryptoModule.psm1"
-    Import-Module .\CryptoModule.psm1 -Force
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "scrips\CryptoModule.psm1"
+    Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
     # Create folders and files
     Create-FolderStructure
     Create-PythonScripts
@@ -696,7 +696,7 @@ $chat = Get-TelegramChat -TelegramToken $telegramToken
 "@
 
     # Save the script to a temporary file
-    $tempScript = ".\scripts\GoBabyGo.ps1"
+    $tempScript = ".\GoBabyGo.ps1"
     $script | Set-Content -Path $tempScript
 
 }
