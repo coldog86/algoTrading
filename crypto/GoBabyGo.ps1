@@ -15,7 +15,7 @@ $telegramToken = Get-TelegramToken
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
 if(!$ignoreInit){
-    init -Branch $branch
+    init
 }
 
 $chat = Get-TelegramChat -TelegramToken $telegramToken
