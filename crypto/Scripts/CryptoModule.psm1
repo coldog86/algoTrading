@@ -2,9 +2,12 @@
 
 
 function init(){
-
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "CryptoModule.psm1"
+    Import-Module .\CryptoModule.psm1 -Force
+    Create-FolderStructure
+    New-Item -Path .\config -Name config.txt
     $walletAddress = Read-Host "Please enter wallet address (it will look something like this 'rDXgW8ZdcPwmSzEzK7s45V6xeSwuwgiVYG')"
-    Set-WalletSecret -SecretNumbers $secretNumbers
+    Set-WalletAddress -WalletAddress $walletAddress
     $secretNumbers = Read-Host "Please enter wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')"
     Set-WalletSecret -SecretNumbers $secretNumbers
     $userTelegramGroup = Read-Host "Please enter the name of the Telegram group you added the bot to" 
@@ -18,6 +21,19 @@ function init(){
     Create-GoBabyGoScript
 }
 
+function Create-Defaults(){
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/config/stops.csv" -OutFile "config\default\stops.csv"  
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/config/stops.csv" -OutFile "config\stops.csv"    
+}
+function Create-FolderStructure(){
+
+    mkdir config
+    mkdir config\default
+    mkdir Doco
+    mkdir Log
+    mkdir Scripts
+    mkdir temp
+}
 
 function Set-WalletAddress(){
     param (
