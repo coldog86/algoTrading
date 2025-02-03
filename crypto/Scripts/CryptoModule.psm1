@@ -352,7 +352,7 @@ function Get-TelegramToken {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "telegramToken:*"){ 
-            Write-Host $line -ForegroundColor cyan
+            write-host $line -ForegroundColor cyan
             $encodedSecret = $line.Split(': ')[2]  
         }
     }
@@ -360,7 +360,7 @@ function Get-TelegramToken {
     try {
         $bytes = [Convert]::FromBase64String($encodedSecret)
         $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
-        #Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
+        Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
     }
@@ -1850,7 +1850,7 @@ function Monitor-Alerts(){
                     $chat = Get-TelegramChat -TelegramToken $telegramToken
                     $count = $chat.update_id.count
                     
-                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\scripts\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
+                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
 
                     # Send alert
                     Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "New token - $($tokenName)"
