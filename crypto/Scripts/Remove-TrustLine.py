@@ -48,3 +48,4 @@ if signed_tx.result['engine_result'] == 'tesSUCCESS':
     print(f"Trust line successfully removed with hash: {signed_tx.result['tx_json']['hash']}")
 else:
     print(f"Transaction failed with result: {signed_tx.result['engine_result_message']}")
+
