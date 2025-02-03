@@ -357,7 +357,7 @@ function Get-TelegramToken {
     try {
         $bytes = [Convert]::FromBase64String($encodedSecret)
         $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
-        #Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
+        Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
     }
@@ -681,25 +681,32 @@ function Create-GoBabyGoScript(){
     Write-Host "Creating GoBabyGo script" -ForegroundColor Magenta
     
     $script = @"
-[Parameter(Mandatory = $false)][int] $WaitTime
-[Parameter(Mandatory = $false)][int] $Count
+[Parameter(Mandatory = $false)][int] $WaitTime = 600
+[Parameter(Mandatory = $false)][int] $Count = 0
+[Parameter(Mandatory = $false)][string] $Username = "coldog86"
+[Parameter(Mandatory = $false)][string] $Repo = 'algoTrading'
+[Parameter(Mandatory = $false)][string] $Branch = 'Beta'
+[Parameter(Mandatory = $false)][string] $Folder = 'crypto/Scripts'
+[Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
+[Parameter(Mandatory = $false)][switch] $ignoreInit
 
-if($null -eq $waitTime){
-    $waitTime = 600
-} 
-if($null -eq $count){
-    $count = 0
-} 
+#Write-Host "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
+Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
-Import-Module '.\scripts\CryptoModule.psm1' -Force -WarningAction Ignore
 $telegramToken = Get-TelegramToken
-Write-Host "Count = $($count)"
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
+if(!$ignoreInit){
+    init
+}
 
 $chat = Get-TelegramChat -TelegramToken $telegramToken
             $count = $chat.update_id.count
             Write-Host "count == $($count)"
+
+
+            
 "@
 
     # Save the script to a temporary file
