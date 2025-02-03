@@ -2,16 +2,19 @@
 
 
 function init(){
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "scrips\CryptoModule.psm1"
+    param (
+        [Parameter(Mandatory = $false)][string] $Branch = 'main'
+    )
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Scripts/CryptoModule.psm1" -OutFile "scripts\CryptoModule.psm1"
     Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
     # Create folders and files
     Create-FolderStructure
     Create-PythonScripts
     Create-GoBabyGoScript
-    Create-DefaultConfigs -Branch 'Beta' -FileName 'stops.csv'
-    Create-DefaultConfigs -Branch 'Beta' -FileName 'buyConditions.csv'
-    Create-Doco -Branch 'Beta' -FileName 'ReadMe.txt'
-    Create-Doco -Branch 'Beta' -FileName 'RoadMap.txt'
+    Create-DefaultConfigs -Branch $branch -FileName 'stops.csv'
+    Create-DefaultConfigs -Branch $branch -FileName 'buyConditions.csv'
+    Create-Doco -Branch $branch -FileName 'ReadMe.txt'
+    Create-Doco -Branch $branch -FileName 'RoadMap.txt'
 }
 function Create-DefaultConfigs(){
     param (

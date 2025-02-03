@@ -15,12 +15,12 @@ $telegramToken = Get-TelegramToken
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
 if(!$ignoreInit){
-    init
+    init -Branch $branch
 }
 
 $chat = Get-TelegramChat -TelegramToken $telegramToken
-            $count = $chat.update_id.count
-            Write-Host "count == $($count)"
+$count = $chat.update_id.count
+Write-Host "count == $($count)"
 
 
             
