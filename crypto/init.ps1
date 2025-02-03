@@ -1,5 +1,7 @@
 cd\
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "CryptoModule.psm1"
+mkdir crypto
+cd crypto
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile ".\CryptoModule.psm1"
 Import-Module .\CryptoModule.psm1 -Force -WarningAction Ignore
 
 # Create folders and files

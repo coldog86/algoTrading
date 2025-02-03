@@ -277,7 +277,7 @@ function Get-WalletSecret {
 
     # Ensure the file exists
     if (-Not (Test-Path $filePath)) {
-        Write-Error "Error: config.txt not found!" -ForegroundColor Red
+        Write-Host "Error: config.txt not found!" -ForegroundColor Red
         return
     }
 
@@ -285,7 +285,7 @@ function Get-WalletSecret {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "walletSecret:*"){ 
-            write-host $line -ForegroundColor cyan
+            Write-Host $line -ForegroundColor cyan
             $encodedSecret = $line.Split(': ')[2]  
         }
     }
@@ -336,7 +336,7 @@ function Get-TelegramToken {
 
     # Ensure the file exists
     if (-Not (Test-Path $filePath)) {
-        Write-Error "Error: config.txt not found!" -ForegroundColor Red
+        Write-Host "Error: config.txt not found!" -ForegroundColor Red
         return
     }
      
