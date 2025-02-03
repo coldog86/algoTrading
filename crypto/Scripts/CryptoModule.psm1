@@ -5,7 +5,11 @@ function init(){
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "CryptoModule.psm1"
     Import-Module .\CryptoModule.psm1 -Force
     Create-FolderStructure
-    New-Item -Path .\config -Name config.txt
+    New-Item -Path .\config -Name config.txt # create blank config file
+    Create-Defaults # create stops and buy conditions etc
+    $useDefaults = Read-Host "Use default stops and buy conditions as active config (this will over write any custom config) (y/n)"
+    if($adminTelegramGroup -eq 'y'){
+    
     $walletAddress = Read-Host "Please enter wallet address (it will look something like this 'rDXgW8ZdcPwmSzEzK7s45V6xeSwuwgiVYG')"
     Set-WalletAddress -WalletAddress $walletAddress
     $secretNumbers = Read-Host "Please enter wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')"
@@ -20,10 +24,15 @@ function init(){
     Create-PythonScripts
     Create-GoBabyGoScript
 }
-
+Create-Defaults -Branch 'Beta' -FileName 'stops.csv'
+Create-Defaults -Branch 'Beta' -FileName 'buyConditions.csv'
 function Create-Defaults(){
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/config/stops.csv" -OutFile "config\default\stops.csv"  
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/config/stops.csv" -OutFile "config\stops.csv"    
+    param (
+        [Parameter(Mandatory = $false)][string] $Branch = 'main',
+        [Parameter(Mandatory = $true)][string] $FileName
+    )
+    Write-Host "Creating default configs"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
 }
 function Create-FolderStructure(){
 

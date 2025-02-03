@@ -12,7 +12,7 @@ if($null -eq $waitTime){
 if($null -eq $count){
     $count = 0
 } 
-
+Write-Host "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile $fileName
 Import-Module .\$fileName -Force -WarningAction Ignore
 
