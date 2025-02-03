@@ -1,13 +1,12 @@
 function setupBot(){
     cd\
-    mkdir crypto
+    mkdir crypto\scripts
     cd crypto
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile ".\CryptoModule.psm1"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile ".\scripts\CryptoModule.psm1"
     Import-Module .\CryptoModule.psm1 -Force -WarningAction Ignore
 
     # Create folders
     Create-FolderStructure
-    New-Item -Path .\config -Name config.txt # create blank config file    
 
     # Create default running config
     Create-DefaultConfigs -Branch 'Beta' -FileName 'stops.csv'
@@ -18,7 +17,8 @@ function setupBot(){
     if($useDefaultConfigs -eq 'y'){
         Get-ChildItem -Path .\config\default | Copy-Item -Destination .\config
     }
-    # Set up config file
+    # Set up config file    
+    New-Item -Path .\config -Name config.txt # create blank config file    
     $walletAddress = Read-Host "Please enter wallet address (it will look something like this 'rDXgW8ZdcPwmSzEzK7s45V6xeSwuwgiVYG')"
     Set-WalletAddress -WalletAddress $walletAddress
     $secretNumbers = Read-Host "Please enter wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')"
