@@ -680,7 +680,7 @@ function Create-GoBabyGoScript(){
     
     Write-Host "Creating GoBabyGo script" -ForegroundColor Magenta
     
-    $script = @"
+    $script = @'
 [Parameter(Mandatory = $false)][int] $WaitTime = 600
 [Parameter(Mandatory = $false)][int] $Count = 0
 [Parameter(Mandatory = $false)][string] $Username = "coldog86"
@@ -702,12 +702,12 @@ if(!$ignoreInit){
 }
 
 $chat = Get-TelegramChat -TelegramToken $telegramToken
-            $count = $chat.update_id.count
-            Write-Host "count == $($count)"
+$count = $chat.update_id.count
+Write-Host "count == $($count)"
 
 
             
-"@
+'@
 
     # Save the script to a temporary file
     $tempScript = ".\GoBabyGo.ps1"
