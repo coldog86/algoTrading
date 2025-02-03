@@ -11,13 +11,14 @@ parser = argparse.ArgumentParser(description="Create a TrustSet transaction on t
 parser.add_argument("issuer", help="Issuer address for the token")
 parser.add_argument("currency_code", help="Currency code for the token")
 parser.add_argument("trust_limit", help="Trust limit to set")
+parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
 args = parser.parse_args()
 
 # Configuration
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
 
 # Get wallet (replace with actual secret numbers or method to get it securely)
-secret_numbers = "261821 244950 228027 024930 002940 326313 427315 043170"
+secret_numbers = args.SECRET_NUMBERS
 wallet = Wallet.from_secret_numbers(secret_numbers)
 
 # Token details from arguments
