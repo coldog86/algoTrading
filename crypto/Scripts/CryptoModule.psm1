@@ -805,7 +805,6 @@ function Get-TokenBalance(){
     )
 
     $uri = "https://s1.ripple.com:51234"  # Mainnet JSON-RPC endpoint
-    $tokenCode = Get-TokenCode 
     $tokenName = Get-TokenName 
 
     # Create the JSON-RPC request payload to get account lines (trust lines)
@@ -990,7 +989,7 @@ function Monitor-EstablishedPosition {
 function Get-TrustLines(){
     Param
     (
-        [Parameter(Mandatory = $false)][string] $WalletAddress = "rDXgW8ZdcPwmSzEzK7s45V6xeSwuwgiVYG",
+        [Parameter(Mandatory = $true)][string] $WalletAddress,
         [Parameter(Mandatory = $false)][switch] $Silent
     )
 
@@ -1415,14 +1414,11 @@ function Get-TokenCodeFromName(){
 function Get-TokenOffers(){
     Param
     (
-        [Parameter(Mandatory = $true)][string] $TokenIssuer,
-        [Parameter(Mandatory = $false)][string] $TokenName = "",
-        [Parameter(Mandatory = $false)][string] $TokenCode = ""
+        [Parameter(Mandatory = $true)][string] $TokenIssuer,        
+        [Parameter(Mandatory = $true)][string] $TokenCode
     )
     
-    if($tokenCode -eq ""){
-        $tokenCode = Get-TokenCode
-    }
+    $tokenName = Get-TokenName    
     
     $apiUrl = "https://s1.ripple.com:51234"
 
@@ -1535,105 +1531,6 @@ function Send-TelegramMessage(){
     }
 }
 
-function Get-LedgerIndex(){
-
-    $uri = "http://s1.ripple.com:51234/"
-    $headers = @{ "Content-Type" = "application/json" }
-
-    # Define the JSON payload
-    $body = @{
-        method = "ledger"
-        params = @(
-            @{
-                "ledger_index" = "validated"
-                "transactions" = $false
-                "expand" = $false
-                "owner_funds" = $false
-            }
-        )
-    } | ConvertTo-Json -Depth 10
-    
-    try {
-        $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body        
-        Write-Host "Ledger Index: " -ForegroundColor Green -NoNewline; Write-Host $response.result.ledger_index
-        Write-Host "Ledger Hash: " -ForegroundColor Green -NoNewline; Write-Host $response.result.ledger_hash
-        return $response.result.ledger_index
-    } catch {
-        Write-Host "Error:" -ForegroundColor Red
-        $_
-    }
-}
-
-
-function Get-LedgerHash(){
-
-    # Define the API endpoint
-    $uri = "http://s1.ripple.com:51234/"
-    # Set headers
-    $headers = @{ "Content-Type" = "application/json" }
-
-    # Define the JSON payload
-    $body = @{
-        method = "ledger"
-        params = @(
-            @{
-                "ledger_index" = "validated"
-                "transactions" = $false
-                "expand" = $false
-                "owner_funds" = $false
-            }
-        )
-    } | ConvertTo-Json -Depth 10
-
-    # Make the POST request
-    try {
-        $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body
-        Write-Host "Ledger Index: " -ForegroundColor Green -NoNewline; Write-Host $response.result.ledger_index
-        Write-Host "Ledger Hash: " -ForegroundColor Green -NoNewline; Write-Host $response.result.ledger_hash
-        return $response.result.ledger_hash
-    } catch {
-        Write-Host "Error:" -ForegroundColor Red
-        $_
-    }
-}
-
-function Get-CreateOffers(){
-
-    # Define the API endpoint
-    $uri = "http://s1.ripple.com:51234/"
-    # Set headers
-    $headers = @{ "Content-Type" = "application/json" }
-    
-    # Define the JSON payload
-    $body = @{
-        method = "ledger"
-        params = @(
-            @{
-                "transactions" = $true
-                "expand" = $true
-                "owner_funds" = $true
-            }
-        )
-    } | ConvertTo-Json -Depth 10
-    
-    # Make the POST request
-    try {
-        $offerCreates = @()
-        $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body        
-    
-        foreach($transaction in $response.result.ledger.transactions){
-            if($transaction.TransactionType -eq 'OfferCreate'){
-                $transaction
-                $offerCreates += $transaction
-            }
-        }
-        return $offerCreates
-    } catch {
-        Write-Host "Error:" -ForegroundColor Red
-        $_
-    }
-}
-
 function Get-TelegramUpdates(){
     Param
         (
@@ -1656,14 +1553,11 @@ function Create-TrustLine(){
     Param
         (
             [Parameter(Mandatory = $true)][string] $TokenIssuer, 
-            [Parameter(Mandatory = $false)][string] $TokenName = "",
-            [Parameter(Mandatory = $false)][string] $TokenCode = "",
+            [Parameter(Mandatory = $true)][string] $TokenCode,
             [Parameter(Mandatory = $false)] $Limit = 100000000 # default limit set to 100 million
         ) 
     
-    $tokenCode = Get-TokenCode 
-    $tokenName = Get-TokenName
-        
+    $tokenName = Get-TokenName        
     Write-Host "Creating trust line for $($tokenName)" -ForegroundColor Cyan
 
     # parameters are: Issuer, currency_code, trust_limit
@@ -1685,8 +1579,7 @@ function Buy-Token(){
     Param
         (
             [Parameter(Mandatory = $true)] $XrpAmount, 
-            [Parameter(Mandatory = $false)][string] $TokenCode = "",
-            [Parameter(Mandatory = $false)][string] $TokenName = "",
+            [Parameter(Mandatory = $false)][string] $TokenCode,
             [Parameter(Mandatory = $true)][string] $TokenIssuer,            
             [Parameter(Mandatory = $false)] $Slipage = 0.05, # default 5% slip
             [Parameter(Mandatory = $false)][string] $Message,
@@ -1694,7 +1587,6 @@ function Buy-Token(){
             [Parameter(Mandatory = $false)][int] $Repeat = 3
         ) 
     
-    $tokenCode = Get-TokenCode
     $tokenName = Get-TokenName
     
     $tokenPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
