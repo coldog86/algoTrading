@@ -37,6 +37,15 @@ Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
 $telegramToken = Get-TelegramToken
 $telegramToken
+Create-FolderStructure
+Create-PythonScripts
+Create-GoBabyGoScript
+Create-DefaultConfigs -Branch $branch -FileName 'stops.csv'
+Create-DefaultConfigs -Branch $branch -FileName 'buyConditions.csv'
+Create-Doco -Branch $branch -FileName 'ReadMe.txt'
+Create-Doco -Branch $branch -FileName 'RoadMap.txt'
+
+
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
 

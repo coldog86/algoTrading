@@ -5,8 +5,8 @@ function init(){
     param (
         [Parameter(Mandatory = $false)][string] $Branch = 'main'
     )
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Scripts/CryptoModule.psm1" -OutFile "scripts\CryptoModule.psm1"
-    Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
+    #Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Scripts/CryptoModule.psm1" -OutFile "scripts\CryptoModule.psm1"
+    #Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
     # Create folders and files
     Create-FolderStructure
     Create-PythonScripts
@@ -282,7 +282,8 @@ function Set-WalletSecret {
 
 function Get-WalletSecret {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][switch] $Silent
     )
 
     # Ensure the file exists
@@ -295,7 +296,9 @@ function Get-WalletSecret {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "walletSecret:*"){ 
-            Write-Host $line -ForegroundColor cyan
+            if(!$switch){
+                Write-Host $line -ForegroundColor cyan
+            }
             $encodedSecret = $line.Split(': ')[2]  
         }
     }
@@ -372,7 +375,7 @@ function Create-BuyTokenScript(){
 
     Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
     # $secret_numbers = "261821 244950 228027 024930 002940 326313 427315 043170"
-    $secret_numbers = Get-WalletSecret
+    $secret_numbers = Get-WalletSecret -Silent
 
 
 $pythonCode = @"
@@ -429,9 +432,6 @@ signed_tx = sign_and_submit(offer, client, wallet)
 
 #print(signed_tx.result)
 
-
-
-
 if "engine_result" in signed_tx.result:
     if signed_tx.result["engine_result"] == "tesSUCCESS":
         print(f"Transaction Result: {signed_tx.result['engine_result']}")
@@ -462,7 +462,7 @@ function Create-SellTokenScript(){
 
 
     Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    $secret_numbers = Get-WalletSecret
+    $secret_numbers = Get-WalletSecret -Silent
 
     $pythonCode = @"
 import xrpl
@@ -556,7 +556,7 @@ else:
 function Create-CreateTrustLineScript(){
 
     Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    $secret_numbers = Get-WalletSecret
+    $secret_numbers = Get-WalletSecret -Silent
 
     $pythonCode = @"
 import xrpl
@@ -622,6 +622,9 @@ else:
 }
 
 function Create-RemoveTrustLineScript(){
+
+    Write-Host "Creating Remove-TrustLine script" -ForegroundColor Magenta
+    $secret_numbers = Get-WalletSecret -Silent
     $pythonCode = @"
 import xrpl
 from xrpl.clients import JsonRpcClient
