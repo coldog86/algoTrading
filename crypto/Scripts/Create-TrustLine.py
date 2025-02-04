@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description="Create a TrustSet transaction on t
 parser.add_argument("issuer", help="Issuer address for the token")
 parser.add_argument("currency_code", help="Currency code for the token")
 parser.add_argument("trust_limit", help="Trust limit to set")
-parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
+parser.add_argument("secret_numbers", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
 args = parser.parse_args()
 
 # Configuration

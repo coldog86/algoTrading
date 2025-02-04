@@ -410,22 +410,22 @@ parser.add_argument('--xrp_amount', type=float, required=True, help='Amount of X
 parser.add_argument('--token_amount', type=str, required=True, help='Amount of the token to receive.')
 parser.add_argument('--token_issuer', type=str, required=True, help='Issuer of the token.')
 parser.add_argument('--token_code', type=str, required=True, help='Token code (currency).')
-parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
+parser.add_argument("--secret_numbers", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
 args = parser.parse_args()
 
 # Setup - Define the XRPL Client
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
-
-# Get wallet
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-#print(wallet)
 
 # Set the parameters from the command line arguments
 XRP_AMOUNT = args.xrp_amount
 TOKEN_AMOUNT = args.token_amount
 TOKEN_ISSUER = args.token_issuer
 TOKEN_CODE = args.token_code
+SECRET_NUMBERS = args.secret_numbers
+
+# Get wallet
+wallet = Wallet.from_secret_numbers(secret_numbers)
+#print(wallet)
 
 XRP_AMOUNT_IN_DROPS = str(int(XRP_AMOUNT * 1_000_000))  # Convert XRP amount to drops
 
@@ -466,6 +466,7 @@ if "engine_result" in signed_tx.result:
 else:
     print("Transaction did not return 'engine_result'. Here is the full response:")
     print(signed_tx.result)
+
 
 "@
 
