@@ -359,7 +359,7 @@ function Get-TelegramToken {
     # Decode Base64
     try {
         $bytes = [Convert]::FromBase64String($encodedSecret)
-        $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
+        #$decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
         Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
