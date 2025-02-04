@@ -25,7 +25,8 @@ $count = $chat.update_id.count
 Write-Host "count == $($count)"
 
 
-<#            
+<#     
+
 $Username = "coldog86"
 $Repo = 'algoTrading'
 $Branch = 'Beta'
@@ -35,5 +36,8 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
 $telegramToken = Get-TelegramToken
+$telegramToken
+Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
+
 
 #>
