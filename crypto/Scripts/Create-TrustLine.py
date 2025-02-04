@@ -11,20 +11,20 @@ parser = argparse.ArgumentParser(description="Create a TrustSet transaction on t
 parser.add_argument("issuer", help="Issuer address for the token")
 parser.add_argument("currency_code", help="Currency code for the token")
 parser.add_argument("trust_limit", help="Trust limit to set")
-parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
+parser.add_argument("secret_numbers", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
 args = parser.parse_args()
 
 # Configuration
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
 
-# Get wallet (replace with actual secret numbers or method to get it securely)
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-
 # Token details from arguments
 issuer = args.issuer
 currency_code = args.currency_code
 trust_limit = args.trust_limit
+secret_numbers = args.secret_numbers
+
+# Get wallet
+wallet = Wallet.from_secret_numbers(secret_numbers)
 
 # Fetch account info to get the sequence number
 account_info = client.request(xrpl.models.requests.AccountInfo(account=wallet.classic_address))

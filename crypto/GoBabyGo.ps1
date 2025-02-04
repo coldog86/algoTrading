@@ -11,16 +11,46 @@
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
-$telegramToken = Get-TelegramToken
+$telegramToken = Get-TelegramToken -Silent
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
-if(!$ignoreInit){
-    init
+if($ignoreInit){
+    Write-Host "Skipping init"
+}
+else {
+    Init
 }
 
-$chat = Get-TelegramChat -TelegramToken $telegramToken
-            $count = $chat.update_id.count
-            Write-Host "count == $($count)"
+$adminTelegramGroup = Get-AdminTelegramGroup
+$chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
+$count = $chat.update_id.count
+Write-Host "count == $($count)"
 
 
             
+
+<#     
+
+$Username = "coldog86"
+$Repo = 'algoTrading'
+$Branch = 'Beta'
+$Folder = 'crypto/Scripts'
+$FileName = 'CryptoModule.psm1'
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
+Import-Module .\scripts\$fileName -Force -WarningAction Ignore
+
+$telegramToken = Get-TelegramToken
+$telegramToken
+Create-FolderStructure
+Create-PythonScripts
+Create-GoBabyGoScript
+Create-DefaultConfigs -Branch $branch -FileName 'stops.csv'
+Create-DefaultConfigs -Branch $branch -FileName 'buyConditions.csv'
+Create-Doco -Branch $branch -FileName 'ReadMe.txt'
+Create-Doco -Branch $branch -FileName 'RoadMap.txt'
+
+
+Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
+
+
+#>

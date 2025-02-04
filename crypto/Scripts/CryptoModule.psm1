@@ -2,33 +2,50 @@
 
 
 function init(){
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/Beta/crypto/Scripts/CryptoModule.psm1" -OutFile "scrips\CryptoModule.psm1"
-    Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
+    param (
+        [Parameter(Mandatory = $true)][string] $Branch
+    )
+    #Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Scripts/CryptoModule.psm1" -OutFile "scripts\CryptoModule.psm1"
+    #Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
     # Create folders and files
     Create-FolderStructure
     Create-PythonScripts
     Create-GoBabyGoScript
-    Create-DefaultConfigs -Branch 'Beta' -FileName 'stops.csv'
-    Create-DefaultConfigs -Branch 'Beta' -FileName 'buyConditions.csv'
-    Create-Doco -Branch 'Beta' -FileName 'ReadMe.txt'
-    Create-Doco -Branch 'Beta' -FileName 'RoadMap.txt'
+    Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
+    Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'
 }
 function Create-DefaultConfigs(){
     param (
-        [Parameter(Mandatory = $false)][string] $Branch = 'main',
-        [Parameter(Mandatory = $true)][string] $FileName
+        [Parameter(Mandatory = $true)][string] $Branch,
+        [Parameter(Mandatory = $true)][string[]] $FileNames
     )
-    Write-Host "Creating default configs ($($fileName))"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
+
+    foreach ($fileName in $fileNames){
+        Write-Host "Creating default configs ($($fileName))"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
+
+        $configFilePath = "C:\config\$($fileName)"
+        $defaultFilePath = "C:\config\default\$($fileName)"
+
+        # Check if the file exists in config folder, copy if not present
+        if (!(Test-Path -Path $configFilePath)) {        
+            Copy-Item -Path $defaultFilePath -Destination $configFilePath
+            Write-Output "File copied from default to active config: $fileName"        
+        } else {
+            Write-Output "File already exists in config folder: $configFilePath"
+        }
+    }
 }
 
 function Create-Doco(){
     param (
-        [Parameter(Mandatory = $false)][string] $Branch = 'main',
-        [Parameter(Mandatory = $true)][string] $FileName
+        [Parameter(Mandatory = $true)][string] $Branch,
+        [Parameter(Mandatory = $true)][string[]] $FileNames
     )
-    Write-Host "Creating $($fileName) file"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "Doco\$($fileName)"   
+    foreach ($fileName in $fileNames){
+        Write-Host "Creating $($fileName) file"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "Doco\$($fileName)"   
+    }
 }
 
 function Create-FolderStructure(){
@@ -226,14 +243,17 @@ function Set-Offset(){
 
 function Get-Offset() {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][switch] $Silent
     )
         
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "offset:*"){
             $offset = $line.Split(': ')[1]
-            Write-Host "Offset = $($offset)" -ForegroundColor Green
+            if(!$silent){
+                Write-Host "Offset = $($offset)" -ForegroundColor Green
+            }
             return $offset
         }
     }
@@ -279,7 +299,8 @@ function Set-WalletSecret {
 
 function Get-WalletSecret {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][switch] $Silent
     )
 
     # Ensure the file exists
@@ -292,7 +313,9 @@ function Get-WalletSecret {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "walletSecret:*"){ 
-            Write-Host $line -ForegroundColor cyan
+            if(!$silent){
+                Write-Host $line -ForegroundColor cyan
+            }
             $encodedSecret = $line.Split(': ')[2]  
         }
     }
@@ -300,6 +323,7 @@ function Get-WalletSecret {
     try {
         $bytes = [Convert]::FromBase64String($encodedSecret)
         $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
+        return $decodedSecret
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
     }
@@ -337,7 +361,8 @@ function Set-TelegramToken {
 
 function Get-TelegramToken {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][switch] $Silent
     )
 
     # Ensure the file exists
@@ -349,7 +374,9 @@ function Get-TelegramToken {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "telegramToken:*"){ 
-            write-host $line -ForegroundColor cyan
+            if(!$silent){
+                write-host $line -ForegroundColor cyan
+            }
             $encodedSecret = $line.Split(': ')[2]  
         }
     }
@@ -357,7 +384,8 @@ function Get-TelegramToken {
     try {
         $bytes = [Convert]::FromBase64String($encodedSecret)
         $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
-        Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
+        #Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
+        return $decodedSecret
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
     }
@@ -367,7 +395,7 @@ function Create-BuyTokenScript(){
 
     Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
     # $secret_numbers = "261821 244950 228027 024930 002940 326313 427315 043170"
-    $secret_numbers = Get-WalletSecret
+    $secret_numbers = Get-WalletSecret -Silent
 
 
 $pythonCode = @"
@@ -385,22 +413,22 @@ parser.add_argument('--xrp_amount', type=float, required=True, help='Amount of X
 parser.add_argument('--token_amount', type=str, required=True, help='Amount of the token to receive.')
 parser.add_argument('--token_issuer', type=str, required=True, help='Issuer of the token.')
 parser.add_argument('--token_code', type=str, required=True, help='Token code (currency).')
-parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
+parser.add_argument("--secret_numbers", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
 args = parser.parse_args()
 
 # Setup - Define the XRPL Client
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
-
-# Get wallet
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-#print(wallet)
 
 # Set the parameters from the command line arguments
 XRP_AMOUNT = args.xrp_amount
 TOKEN_AMOUNT = args.token_amount
 TOKEN_ISSUER = args.token_issuer
 TOKEN_CODE = args.token_code
+SECRET_NUMBERS = args.secret_numbers
+
+# Get wallet
+wallet = Wallet.from_secret_numbers(SECRET_NUMBERS)
+#print(wallet)
 
 XRP_AMOUNT_IN_DROPS = str(int(XRP_AMOUNT * 1_000_000))  # Convert XRP amount to drops
 
@@ -424,9 +452,6 @@ signed_tx = sign_and_submit(offer, client, wallet)
 
 #print(signed_tx.result)
 
-
-
-
 if "engine_result" in signed_tx.result:
     if signed_tx.result["engine_result"] == "tesSUCCESS":
         print(f"Transaction Result: {signed_tx.result['engine_result']}")
@@ -445,6 +470,7 @@ else:
     print("Transaction did not return 'engine_result'. Here is the full response:")
     print(signed_tx.result)
 
+
 "@
 
     # Save the script to a temporary file
@@ -457,7 +483,7 @@ function Create-SellTokenScript(){
 
 
     Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    $secret_numbers = Get-WalletSecret
+    $secret_numbers = Get-WalletSecret -Silent
 
     $pythonCode = @"
 import xrpl
@@ -551,7 +577,7 @@ else:
 function Create-CreateTrustLineScript(){
 
     Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    $secret_numbers = Get-WalletSecret
+    $secret_numbers = Get-WalletSecret -Silent
 
     $pythonCode = @"
 import xrpl
@@ -567,20 +593,20 @@ parser = argparse.ArgumentParser(description="Create a TrustSet transaction on t
 parser.add_argument("issuer", help="Issuer address for the token")
 parser.add_argument("currency_code", help="Currency code for the token")
 parser.add_argument("trust_limit", help="Trust limit to set")
-parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
+parser.add_argument("secret_numbers", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
 args = parser.parse_args()
 
 # Configuration
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
 
-# Get wallet (replace with actual secret numbers or method to get it securely)
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-
 # Token details from arguments
 issuer = args.issuer
 currency_code = args.currency_code
 trust_limit = args.trust_limit
+secret_numbers = args.secret_numbers
+
+# Get wallet
+wallet = Wallet.from_secret_numbers(secret_numbers)
 
 # Fetch account info to get the sequence number
 account_info = client.request(xrpl.models.requests.AccountInfo(account=wallet.classic_address))
@@ -609,6 +635,7 @@ if response.result['engine_result'] == 'tesSUCCESS':
 else:
     print(f"Transaction failed with result: {response.result['engine_result_message']}")
 
+
 "@
 
     # Save the script to a temporary file
@@ -617,6 +644,9 @@ else:
 }
 
 function Create-RemoveTrustLineScript(){
+
+    Write-Host "Creating Remove-TrustLine script" -ForegroundColor Magenta
+    $secret_numbers = Get-WalletSecret -Silent
     $pythonCode = @"
 import xrpl
 from xrpl.clients import JsonRpcClient
@@ -680,7 +710,7 @@ function Create-GoBabyGoScript(){
     
     Write-Host "Creating GoBabyGo script" -ForegroundColor Magenta
     
-    $script = @"
+    $script = @'
 [Parameter(Mandatory = $false)][int] $WaitTime = 600
 [Parameter(Mandatory = $false)][int] $Count = 0
 [Parameter(Mandatory = $false)][string] $Username = "coldog86"
@@ -701,13 +731,14 @@ if(!$ignoreInit){
     init
 }
 
-$chat = Get-TelegramChat -TelegramToken $telegramToken
-            $count = $chat.update_id.count
-            Write-Host "count == $($count)"
+$adminTelegramGroup = Get-AdminTelegramGroup
+$chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
+$count = $chat.update_id.count
+Write-Host "count == $($count)"
 
 
             
-"@
+'@
 
     # Save the script to a temporary file
     $tempScript = ".\GoBabyGo.ps1"
@@ -1342,7 +1373,7 @@ function Test-TokenCode(){
             Test-TokenCode -TokenIssuer $tokenIssuer -TokenCode $tokenName -TokenName $tokenName -SecondTest
         } else {
             Write-Host "Bad token code" -ForegroundColor Red
-        #Exit
+            #Exit
         }
     }
     else{
@@ -1503,11 +1534,11 @@ function Get-AlertTypeFromAlert(){
 function Get-NewestTokenAlert(){
     Param
     (
-        [Parameter(Mandatory = $false)][string] $ChatId = "@testgroupjbn121",
+        [Parameter(Mandatory = $false)][string] $ChatId,
         [Parameter(Mandatory = $true)][string] $TelegramToken
     )
     
-    $chat = Get-TelegramChat -TelegramToken $telegramToken
+    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $chatId
     for($i = $chat.count-1; $i -gt 0; $i--){
         $alert = $chat[$i].message.text
         $title = Get-AlertTypeFromAlert -Alert $alert
@@ -1577,7 +1608,7 @@ function Create-TrustLine(){
     # parameters are: Issuer, currency_code, trust_limit
     # python C:\Users\cmcke\Documents\crypto\Create-TrustLine.py rGHtYnnigyuaHehWGfAdoEhkoirkGNdZzo 7363726170000000000000000000000000000000 10000
     # python C:\Users\cmcke\Documents\crypto\Create-TrustLine.py --issuer $tokenIssuer --currency_code $tokenCode --trust_limit $limit
-    $secretNumbers = WalletSecret
+    $secretNumbers = Get-WalletSecret
     $result = python .\scripts\Create-TrustLine.py $tokenIssuer $tokenCode $limit $secretNumbers
     
     if(($result -like "*successfully*")){
@@ -1749,13 +1780,14 @@ function Get-TelegramChat(){
     Param
         (
             [Parameter(Mandatory = $true)] $TelegramToken, 
+            [Parameter(Mandatory = $true)][string] $TelegramGroup, 
             [Parameter(Mandatory = $false)][int] $Offset = "",
             [Parameter(Mandatory = $false)][switch] $Silent
         ) 
 
     $uri = "https://api.telegram.org/bot$($telegramToken)/getUpdates"
     if($offset -eq ""){
-        [int] $offset = Get-Content .\config\offset.txt
+        [int] $offset = Get-Offset -Silent
         if(!$silent){
             Write-Host "Stored offset = $($offset)" -ForegroundColor Magenta
         }
@@ -1765,7 +1797,8 @@ function Get-TelegramChat(){
         offset = $offset
     }
     $response = (Invoke-RestMethod -Uri $uri -Method POST -ContentType "application/json" -Body ($payload | ConvertTo-Json -Depth 10)).result
-    
+    $response = $response | ?{$_.message.text -like "*NEW TOKEN*"}
+
     $updateId = $response[$response.count-1].update_id
     if(!$silent){
         Write-Host "UpdateID = $($updateId)" -ForegroundColor Magenta
@@ -1776,7 +1809,7 @@ function Get-TelegramChat(){
         $alert = $response[$response.count -1].message.text
         if($alert -eq 'test'){
             Write-Host "Test received"
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "Test received"
+            Send-TelegramMessage -ChatId $telegramGroup -Message "Test received"
         } 
         else {
             $messageId = $response[$response.count -1].message.message_id
@@ -1792,28 +1825,26 @@ function Get-TelegramChat(){
 function Monitor-Alerts(){
     Param
         (
-            [Parameter(Mandatory = $false)][string] $ChatId = "@testgroupjbn121",
             [Parameter(Mandatory = $true)] $TelegramToken,
             [Parameter(Mandatory = $false)][switch] $Silent,          
             [Parameter(Mandatory = $false)] $WaitTime = 300, # In seconds
             [Parameter(Mandatory = $false)] $Count
         )
     $standardBuy = Get-StandardBuy
-    $chat = Get-TelegramChat -TelegramToken $telegramToken
+    $userTelegramGroup = Get-UserTelegramGroup
+    $adminTelegramGroup = Get-AdminTelegramGroup
+    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
+    Write-Host "Chat count = $($chat.count)" -ForegroundColor Yellow -BackgroundColor Black
     $count = $chat.update_id.count
     $loop = $true
     while($loop -eq $true){
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 5
-                
-        if($silent){
-            $chat = Get-TelegramChat -TelegramToken $telegramToken -Silent
-        } else {
-            $chat = Get-TelegramChat -TelegramToken $telegramToken
-        }
+        $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent 
+        
         if($chat.count -gt $count){
             $i = $chat.count - $count 
-            while($i -gt 0 -and $loop -eq $true){
+            #while($i -gt 0 -and $loop -eq $true){
                 $newTokenAlert = $chat[$chat.count -$i].message.text
                 $i--
                 $alertType = Get-AlertTypeFromAlert -Alert $newTokenAlert -Silent
@@ -1824,8 +1855,8 @@ function Monitor-Alerts(){
                     $standardBuy = $newTokenAlert.split('=')[1]
                     $standardBuy = $standardBuy.replace(' ','')
                     Set-StandardBuy -StandardBuy $standardBuy
-                    Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "Standard buy set to $($standardBuy)"
-                    Send-TelegramMessage -ChatId "@testgroupjbn121" -Message "done"
+                    Send-TelegramMessage -ChatId $userTelegramGroup -Message "Standard buy set to $($standardBuy)"
+                    Send-TelegramMessage -ChatId $adminTelegramGroup -Message "done"
                 }
                 
                 # When an alert comes in, do the following
@@ -1844,13 +1875,13 @@ function Monitor-Alerts(){
 
                     # Open a new powershell window
                     Write-host "starting new shell"
-                    $chat = Get-TelegramChat -TelegramToken $telegramToken
+                    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
                     $count = $chat.update_id.count
                     
-                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\scripts\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
+                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
 
                     # Send alert
-                    Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "New token - $($tokenName)"
+                    Send-TelegramMessage -ChatId $userTelegramGroup -Message "New token - $($tokenName)"
                     Write-Host "(this can be deleted its just to confirm we exited the Send-TelegramMessage function)"
                     Write-Host "Token code = $($tokenCode)"
 
@@ -1888,7 +1919,7 @@ function Monitor-Alerts(){
                         ExitShell
                     }
                 }
-            }
+            #}
         }
     }
 }
