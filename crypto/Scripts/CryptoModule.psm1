@@ -1828,11 +1828,8 @@ function Monitor-Alerts(){
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 5
                 
-        if($silent){
-            $chat = Get-TelegramChat -TelegramToken $telegramToken -Silent
-        } else {
-            $chat = Get-TelegramChat -TelegramToken $telegramToken
-        }
+        $chat = Get-TelegramChat -TelegramToken $telegramToken -Silent
+        
         if($chat.count -gt $count){
             $i = $chat.count - $count 
             while($i -gt 0 -and $loop -eq $true){
