@@ -1373,7 +1373,7 @@ function Test-TokenCode(){
             Test-TokenCode -TokenIssuer $tokenIssuer -TokenCode $tokenName -TokenName $tokenName -SecondTest
         } else {
             Write-Host "Bad token code" -ForegroundColor Red
-        #Exit
+            #Exit
         }
     }
     else{
@@ -1797,7 +1797,8 @@ function Get-TelegramChat(){
         offset = $offset
     }
     $response = (Invoke-RestMethod -Uri $uri -Method POST -ContentType "application/json" -Body ($payload | ConvertTo-Json -Depth 10)).result
-    
+    $response = $response | ?{$_.message.text -like "*NEW TOKEN*"}
+
     $updateId = $response[$response.count-1].update_id
     if(!$silent){
         Write-Host "UpdateID = $($updateId)" -ForegroundColor Magenta
@@ -1832,15 +1833,14 @@ function Monitor-Alerts(){
     $standardBuy = Get-StandardBuy
     $userTelegramGroup = Get-UserTelegramGroup
     $adminTelegramGroup = Get-AdminTelegramGroup
-    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
-    $chat = $chat | ?{$_.message.text -like "*NEW TOKEN*"}
+    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
     Write-Host "Chat count = $($chat.count)" -ForegroundColor Yellow -BackgroundColor Black
     $count = $chat.update_id.count
     $loop = $true
     while($loop -eq $true){
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 5
-        $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent
+        $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent 
         
         if($chat.count -gt $count){
             $i = $chat.count - $count 
@@ -1875,7 +1875,7 @@ function Monitor-Alerts(){
 
                     # Open a new powershell window
                     Write-host "starting new shell"
-                    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
+                    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
                     $count = $chat.update_id.count
                     
                     Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
