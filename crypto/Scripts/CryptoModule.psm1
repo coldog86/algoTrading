@@ -1834,6 +1834,7 @@ function Monitor-Alerts(){
     $adminTelegramGroup = Get-AdminTelegramGroup
     $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
     $chat = $chat | ?{$_.message.text -like "*NEW TOKEN*"}
+    Write-Host "Chat count = $($chat.count)" -ForegroundColor Yellow -BackgroundColor Black
     $count = $chat.update_id.count
     $loop = $true
     while($loop -eq $true){
@@ -1841,10 +1842,10 @@ function Monitor-Alerts(){
         Start-Sleep -Seconds 5
         $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent
         
-        if($chat.update_id.count -gt $count){
-            $i = $chat.update_id.count - $count 
+        if($chat.count -gt $count){
+            $i = $chat.count - $count 
             #while($i -gt 0 -and $loop -eq $true){
-                $newTokenAlert = $chat[$chat.update_id.count -$i].message.text
+                $newTokenAlert = $chat[$chat.count -$i].message.text
                 $i--
                 $alertType = Get-AlertTypeFromAlert -Alert $newTokenAlert -Silent
                 
