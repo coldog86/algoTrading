@@ -361,7 +361,8 @@ function Set-TelegramToken {
 
 function Get-TelegramToken {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][switch] $Silent
     )
 
     # Ensure the file exists
@@ -373,7 +374,9 @@ function Get-TelegramToken {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "telegramToken:*"){ 
-            write-host $line -ForegroundColor cyan
+            if(!$silent){
+                write-host $line -ForegroundColor cyan
+            }
             $encodedSecret = $line.Split(': ')[2]  
         }
     }
