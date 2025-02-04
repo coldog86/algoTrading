@@ -14,7 +14,7 @@ Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 $telegramToken = Get-TelegramToken
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
-if(!$ignoreInit){
+if($ignoreInit){
     init
 }
 
