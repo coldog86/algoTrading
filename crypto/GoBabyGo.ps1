@@ -11,6 +11,8 @@
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
+Write-Host "*** PROOF IT OVERWRITES ***"
+
 $telegramToken = Get-TelegramToken
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
