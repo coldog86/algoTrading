@@ -3,7 +3,7 @@
 
 function init(){
     param (
-        [Parameter(Mandatory = $false)][string] $Branch = 'main'
+        [Parameter(Mandatory = $true)][string] $Branch
     )
     #Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Scripts/CryptoModule.psm1" -OutFile "scripts\CryptoModule.psm1"
     #Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
@@ -11,27 +11,41 @@ function init(){
     Create-FolderStructure
     Create-PythonScripts
     Create-GoBabyGoScript
-    Create-DefaultConfigs -Branch $branch -FileName 'stops.csv'
-    Create-DefaultConfigs -Branch $branch -FileName 'buyConditions.csv'
-    Create-Doco -Branch $branch -FileName 'ReadMe.txt'
-    Create-Doco -Branch $branch -FileName 'RoadMap.txt'
+    Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
+    Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'
 }
 function Create-DefaultConfigs(){
     param (
-        [Parameter(Mandatory = $false)][string] $Branch = 'main',
-        [Parameter(Mandatory = $true)][string] $FileName
+        [Parameter(Mandatory = $true)][string] $Branch,
+        [Parameter(Mandatory = $true)][string[]] $FileNames
     )
-    Write-Host "Creating default configs ($($fileName))"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
+
+    foreach ($fileName in $fileNames){
+        Write-Host "Creating default configs ($($fileName))"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
+
+        $configFilePath = "C:\config\$($fileName)"
+        $defaultFilePath = "C:\config\default\$($fileName)"
+
+        # Check if the file exists in config folder, copy if not present
+        if (!(Test-Path -Path $configFilePath)) {        
+            Copy-Item -Path $defaultFilePath -Destination $configFilePath
+            Write-Output "File copied from default to active config: $fileName"        
+        } else {
+            Write-Output "File already exists in config folder: $configFilePath"
+        }
+    }
 }
 
 function Create-Doco(){
     param (
-        [Parameter(Mandatory = $false)][string] $Branch = 'main',
-        [Parameter(Mandatory = $true)][string] $FileName
+        [Parameter(Mandatory = $true)][string] $Branch,
+        [Parameter(Mandatory = $true)][string[]] $FileNames
     )
-    Write-Host "Creating $($fileName) file"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "Doco\$($fileName)"   
+    foreach ($fileName in $fileNames){
+        Write-Host "Creating $($fileName) file"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "Doco\$($fileName)"   
+    }
 }
 
 function Create-FolderStructure(){
