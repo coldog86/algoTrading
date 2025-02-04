@@ -1833,6 +1833,7 @@ function Monitor-Alerts(){
     $userTelegramGroup = Get-UserTelegramGroup
     $adminTelegramGroup = Get-AdminTelegramGroup
     $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
+    $chat = $chat | ?{$_.message.text -like "*NEW TOKEN*"}
     $count = $chat.update_id.count
     $loop = $true
     while($loop -eq $true){
@@ -1840,10 +1841,10 @@ function Monitor-Alerts(){
         Start-Sleep -Seconds 5
         $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent
         
-        if($chat.count -gt $count){
-            $i = $chat.count - $count 
-            while($i -gt 0 -and $loop -eq $true){
-                $newTokenAlert = $chat[$chat.count -$i].message.text
+        if($chat.update_id.count -gt $count){
+            $i = $chat.update_id.count - $count 
+            #while($i -gt 0 -and $loop -eq $true){
+                $newTokenAlert = $chat[$chat.update_id.count -$i].message.text
                 $i--
                 $alertType = Get-AlertTypeFromAlert -Alert $newTokenAlert -Silent
                 
@@ -1917,7 +1918,7 @@ function Monitor-Alerts(){
                         ExitShell
                     }
                 }
-            }
+            #}
         }
     }
 }
