@@ -20,11 +20,6 @@ args = parser.parse_args()
 # Setup - Define the XRPL Client
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
 
-# Get wallet
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-#print(wallet)
-
 # Extract values from arguments
 TOKEN_ISSUER = args.TOKEN_ISSUER
 TOKEN_CODE = args.TOKEN_CODE
@@ -32,6 +27,10 @@ SELL_AMOUNT = str(args.SELL_AMOUNT)
 XRP_PRICE_PER_TOKEN = args.XRP_PRICE_PER_TOKEN
 XRP_PRICE_IN_DROPS = float(XRP_PRICE_PER_TOKEN * 1_000_000)
 
+# Get wallet
+secret_numbers = args.SECRET_NUMBERS
+wallet = Wallet.from_secret_numbers(secret_numbers)
+#print(wallet)
 
 # Check for NaN and invalid values
 if math.isnan(XRP_PRICE_IN_DROPS) or math.isnan(float(SELL_AMOUNT)):

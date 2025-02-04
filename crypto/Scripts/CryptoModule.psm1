@@ -14,6 +14,19 @@ function init(){
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
     Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'
 }
+
+function Log-Price(){
+    Param
+        (
+            [Parameter(Mandatory = $false)][string] $CurrentPrice,
+            [Parameter(Mandatory = $false)][string] $TokenName,
+            [Parameter(Mandatory = $false)][string] $LogFolder = "E:\cmcke\Documents\Crypto\log"
+        )
+    $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$time,$CurrentPrice" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
+}
+
+
 function Create-DefaultConfigs(){
     param (
         [Parameter(Mandatory = $true)][string] $Branch,
@@ -250,7 +263,7 @@ function Get-Offset() {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "offset:*"){
-            $offset = $line.Split(': ')[1]
+            $offset = $line.Split(': ')[2]
             if(!$silent){
                 Write-Host "Offset = $($offset)" -ForegroundColor Green
             }
@@ -508,18 +521,18 @@ args = parser.parse_args()
 # Setup - Define the XRPL Client
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
 
-# Get wallet
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-#print(wallet)
-
 # Extract values from arguments
 TOKEN_ISSUER = args.TOKEN_ISSUER
 TOKEN_CODE = args.TOKEN_CODE
 SELL_AMOUNT = str(args.SELL_AMOUNT)
+secret_numbers = args.SECRET_NUMBERS
+
 XRP_PRICE_PER_TOKEN = args.XRP_PRICE_PER_TOKEN
 XRP_PRICE_IN_DROPS = float(XRP_PRICE_PER_TOKEN * 1_000_000)
 
+# Get wallet
+wallet = Wallet.from_secret_numbers(secret_numbers)
+#print(wallet)
 
 # Check for NaN and invalid values
 if math.isnan(XRP_PRICE_IN_DROPS) or math.isnan(float(SELL_AMOUNT)):
@@ -1144,8 +1157,10 @@ function Sleep-WithPriceChecks {
     $progressStatus = "Time remaining"
     # Array to track the percentage increases
     $percentageHistory = @()
-    
-    for ($i = $startIncriment; $i -lt $seconds; $i++) {
+
+    for ($i = $startIncriment; $i -lt $seconds; $i++) {   
+        Log-Price -TokenName $tokenName -CurrentPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+
         $percentComplete = [int](($i / $seconds) * 100)
         $timeRemaining = $seconds - $i
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
