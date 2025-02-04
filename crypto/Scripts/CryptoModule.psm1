@@ -1635,10 +1635,14 @@ function Buy-Token(){
     $tokenName = Get-TokenName
     
     $tokenPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-    $amountToBuy = $xrpAmount / $tokenPrice
+    $quantity = $xrpAmount / $tokenPrice
     $slipage = 1 - $slipage
     Write-Host "Slipage = $($slipage)" -ForegroundColor Magenta
-    $amountToBuy = $amountToBuy * $slipage
+    $amountToBuy = $quantity * $slipage
+    $commission = $quantity - $amountToBuy
+    
+    Write-Host "Commision on this sale would be = $($commission)" -ForegroundColor Green -BackgroundColor Black
+
     Write-Host "Buying $($amountToBuy) $($tokenName)" -ForegroundColor Cyan
 
     $secretNumbers = Get-WalletSecret
@@ -1696,7 +1700,8 @@ function Sell-Token(){
     }
         
     $tokenName = Get-TokenName 
-    [double]$initialTokenBalance = Get-TokenBalance -TokenCode $tokenCode
+    $walletAddress = Get-WalletAddress
+    [double]$initialTokenBalance = Get-TokenBalance -TokenCode $tokenCode -WalletAddress $walletAddress
     [double]$check = $initialTokenBalance
     [double]$tokensToSell = $initialTokenBalance * ($amountOfTokenToSell/100)
     [double]$expectedBalance = ($initialTokenBalance - $tokensToSell) 
@@ -1737,8 +1742,7 @@ function Sell-Token(){
         Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -AmountOfTokenToSell $amountOfTokenToSell -Message $message -Slipage 0.05 -SafetyCount $safetyCount    
     }
     Start-Sleep -Seconds 5
-    [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode
-    
+    [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode -WalletAddress $walletAddress
 
     if($currentBalance -eq 0) {
         return $currentBalance
@@ -1747,13 +1751,13 @@ function Sell-Token(){
         if($currentBalance -eq $check){
             Write-Host "balance hasn't changed, runing Get-TokenBalance again" -ForegroundColor Red
             Start-Sleep -Seconds 10
-            [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode
+            [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode -WalletAddress $walletAddress
             if($currentBalance -eq $check){
                 Write-Host "balance hasn't changed again...." -ForegroundColor Red
-                [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode
+                [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode -WalletAddress $walletAddress
                 if($currentBalance -eq $check){
                     Write-Host "Last chance" -ForegroundColor Red
-                    [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode
+                    [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode -WalletAddress $walletAddress
                     if($currentBalance -eq $check){
                         Write-Host "We're done" -ForegroundColor Red
                         return $currentBalance
@@ -1767,7 +1771,7 @@ function Sell-Token(){
 
         [int]$percent = 100 - (($expectedBalance / $currentBalance) * 100)
         while( $currentBalance -gt $expectedBalance -and $percent -gt 5 ){        
-            [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode
+            [double]$currentBalance = Get-TokenBalance -TokenCode $tokenCode -WalletAddress $walletAddress
             $percent = 100 - (($expectedBalance / $currentBalance) * 100)
             Write-Host "$($currentBalance) is above $($expectedBalance) by $($percent)%" -ForegroundColor Yellow
             [double]$tokensToSell = (1 - ($expectedBalance / $currentBalance) ) * 100
