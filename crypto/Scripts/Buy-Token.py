@@ -26,7 +26,7 @@ TOKEN_CODE = args.token_code
 SECRET_NUMBERS = args.secret_numbers
 
 # Get wallet
-wallet = Wallet.from_secret_numbers(secret_numbers)
+wallet = Wallet.from_secret_numbers(SECRET_NUMBERS)
 #print(wallet)
 
 XRP_AMOUNT_IN_DROPS = str(int(XRP_AMOUNT * 1_000_000))  # Convert XRP amount to drops
