@@ -21,7 +21,8 @@ else {
     Init
 }
 
-$chat = Get-TelegramChat -TelegramToken $telegramToken
+$adminTelegramGroup = Get-AdminTelegramGroup
+$chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
 $count = $chat.update_id.count
 Write-Host "count == $($count)"
 

@@ -726,7 +726,8 @@ if(!$ignoreInit){
     init
 }
 
-$chat = Get-TelegramChat -TelegramToken $telegramToken
+$adminTelegramGroup = Get-AdminTelegramGroup
+$chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
 $count = $chat.update_id.count
 Write-Host "count == $($count)"
 
@@ -1528,11 +1529,11 @@ function Get-AlertTypeFromAlert(){
 function Get-NewestTokenAlert(){
     Param
     (
-        [Parameter(Mandatory = $false)][string] $ChatId = "@testgroupjbn121",
+        [Parameter(Mandatory = $false)][string] $ChatId,
         [Parameter(Mandatory = $true)][string] $TelegramToken
     )
     
-    $chat = Get-TelegramChat -TelegramToken $telegramToken
+    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $chatId
     for($i = $chat.count-1; $i -gt 0; $i--){
         $alert = $chat[$i].message.text
         $title = Get-AlertTypeFromAlert -Alert $alert
@@ -1774,6 +1775,7 @@ function Get-TelegramChat(){
     Param
         (
             [Parameter(Mandatory = $true)] $TelegramToken, 
+            [Parameter(Mandatory = $true)][string] $TelegramGroup, 
             [Parameter(Mandatory = $false)][int] $Offset = "",
             [Parameter(Mandatory = $false)][switch] $Silent
         ) 
@@ -1801,7 +1803,7 @@ function Get-TelegramChat(){
         $alert = $response[$response.count -1].message.text
         if($alert -eq 'test'){
             Write-Host "Test received"
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "Test received"
+            Send-TelegramMessage -ChatId $telegramGroup -Message "Test received"
         } 
         else {
             $messageId = $response[$response.count -1].message.message_id
@@ -1817,25 +1819,22 @@ function Get-TelegramChat(){
 function Monitor-Alerts(){
     Param
         (
-            [Parameter(Mandatory = $false)][string] $ChatId = "@testgroupjbn121",
             [Parameter(Mandatory = $true)] $TelegramToken,
             [Parameter(Mandatory = $false)][switch] $Silent,          
             [Parameter(Mandatory = $false)] $WaitTime = 300, # In seconds
             [Parameter(Mandatory = $false)] $Count
         )
     $standardBuy = Get-StandardBuy
-    $chat = Get-TelegramChat -TelegramToken $telegramToken
+    $userTelegramGroup = Get-UserTelegramGroup
+    $adminTelegramGroup = Get-AdminTelegramGroup
+    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
     $count = $chat.update_id.count
     $loop = $true
     while($loop -eq $true){
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 5
-                
-        if($silent){
-            $chat = Get-TelegramChat -TelegramToken $telegramToken -Silent
-        } else {
-            $chat = Get-TelegramChat -TelegramToken $telegramToken
-        }
+        $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent
+        
         if($chat.count -gt $count){
             $i = $chat.count - $count 
             while($i -gt 0 -and $loop -eq $true){
@@ -1849,8 +1848,8 @@ function Monitor-Alerts(){
                     $standardBuy = $newTokenAlert.split('=')[1]
                     $standardBuy = $standardBuy.replace(' ','')
                     Set-StandardBuy -StandardBuy $standardBuy
-                    Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "Standard buy set to $($standardBuy)"
-                    Send-TelegramMessage -ChatId "@testgroupjbn121" -Message "done"
+                    Send-TelegramMessage -ChatId $userTelegramGroup -Message "Standard buy set to $($standardBuy)"
+                    Send-TelegramMessage -ChatId $adminTelegramGroup -Message "done"
                 }
                 
                 # When an alert comes in, do the following
@@ -1869,13 +1868,13 @@ function Monitor-Alerts(){
 
                     # Open a new powershell window
                     Write-host "starting new shell"
-                    $chat = Get-TelegramChat -TelegramToken $telegramToken
+                    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
                     $count = $chat.update_id.count
                     
                     Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
 
                     # Send alert
-                    Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "New token - $($tokenName)"
+                    Send-TelegramMessage -ChatId $userTelegramGroup -Message "New token - $($tokenName)"
                     Write-Host "(this can be deleted its just to confirm we exited the Send-TelegramMessage function)"
                     Write-Host "Token code = $($tokenCode)"
 
