@@ -17,14 +17,14 @@ args = parser.parse_args()
 # Configuration
 client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
 
-# Get wallet (replace with actual secret numbers or method to get it securely)
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-
 # Token details from arguments
 issuer = args.issuer
 currency_code = args.currency_code
 trust_limit = args.trust_limit
+secret_numbers = args.secret_numbers
+
+# Get wallet
+wallet = Wallet.from_secret_numbers(secret_numbers)
 
 # Fetch account info to get the sequence number
 account_info = client.request(xrpl.models.requests.AccountInfo(account=wallet.classic_address))
