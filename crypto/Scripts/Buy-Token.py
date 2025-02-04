@@ -51,9 +51,6 @@ signed_tx = sign_and_submit(offer, client, wallet)
 
 #print(signed_tx.result)
 
-
-
-
 if "engine_result" in signed_tx.result:
     if signed_tx.result["engine_result"] == "tesSUCCESS":
         print(f"Transaction Result: {signed_tx.result['engine_result']}")

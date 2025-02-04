@@ -296,7 +296,7 @@ function Get-WalletSecret {
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "walletSecret:*"){ 
-            if(!$switch){
+            if(!$silent){
                 Write-Host $line -ForegroundColor cyan
             }
             $encodedSecret = $line.Split(': ')[2]  
