@@ -243,14 +243,17 @@ function Set-Offset(){
 
 function Get-Offset() {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][switch] $Silent
     )
         
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "offset:*"){
             $offset = $line.Split(': ')[1]
-            Write-Host "Offset = $($offset)" -ForegroundColor Green
+            if(!$silent){
+                Write-Host "Offset = $($offset)" -ForegroundColor Green
+            }
             return $offset
         }
     }
@@ -1777,7 +1780,7 @@ function Get-TelegramChat(){
 
     $uri = "https://api.telegram.org/bot$($telegramToken)/getUpdates"
     if($offset -eq ""){
-        [int] $offset = Get-Offset
+        [int] $offset = Get-Offset -Silent $silent
         if(!$silent){
             Write-Host "Stored offset = $($offset)" -ForegroundColor Magenta
         }
@@ -1828,8 +1831,11 @@ function Monitor-Alerts(){
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 5
                 
-        $chat = Get-TelegramChat -TelegramToken $telegramToken -Silent
-        
+        if($silent){
+            $chat = Get-TelegramChat -TelegramToken $telegramToken -Silent
+        } else {
+            $chat = Get-TelegramChat -TelegramToken $telegramToken
+        }
         if($chat.count -gt $count){
             $i = $chat.count - $count 
             while($i -gt 0 -and $loop -eq $true){
