@@ -303,6 +303,7 @@ function Get-WalletSecret {
     try {
         $bytes = [Convert]::FromBase64String($encodedSecret)
         $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
+        return $decodedSecret
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
     }
@@ -361,6 +362,7 @@ function Get-TelegramToken {
         $bytes = [Convert]::FromBase64String($encodedSecret)
         $decodedSecret = [System.Text.Encoding]::UTF8.GetString($bytes)
         #Write-Host "Decrypted Secret: $decodedSecret" -ForegroundColor Green
+        return $decodedSecret
     } catch {
         Write-Host "Error: Invalid Base64 string!" -ForegroundColor Red
     }
