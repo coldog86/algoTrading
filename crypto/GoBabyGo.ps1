@@ -11,7 +11,7 @@
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 
-$telegramToken = Get-TelegramToken
+$telegramToken = Get-TelegramToken -Silent
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
 
 if($ignoreInit){
