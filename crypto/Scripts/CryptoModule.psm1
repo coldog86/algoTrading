@@ -241,17 +241,20 @@ function Set-Offset(){
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
     )
 
-
     $configContent = Get-Content -Path $filePath -Raw
 
-    # Check if walletSecret is present
-    if ($configContent -like "offset:*") { 
-        # Replace existing walletSecret
-        $configContent = $configContent -replace "^offset: .+", "offset: $offset"
+    # Check if offset exists using regex
+    if ($configContent -match "(?m)^\s*offset:\s*\d+") { 
+        # Replace existing offset
+        Write-Host "Updating offset"
+        $configContent = $configContent -replace "(?m)^\s*offset:\s*\d+", "offset: $offset"
     } else {
-        # Append walletSecret if not found
+        # Append offset with a new line
+        Write-Host "Appending offset"
         $configContent += "`noffset: $offset"
     }
+    # Save config
+    Set-Content -Path $filePath -Value $configContent
 }
 
 function Get-Offset() {
