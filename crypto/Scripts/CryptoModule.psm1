@@ -1780,7 +1780,7 @@ function Get-TelegramChat(){
 
     $uri = "https://api.telegram.org/bot$($telegramToken)/getUpdates"
     if($offset -eq ""){
-        [int] $offset = Get-Offset -Silent $silent
+        [int] $offset = Get-Offset -Silent
         if(!$silent){
             Write-Host "Stored offset = $($offset)" -ForegroundColor Magenta
         }
