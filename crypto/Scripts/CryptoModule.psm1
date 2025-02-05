@@ -1746,7 +1746,7 @@ function Sell-Token(){
 
     # --TOKEN_ISSUER --TOKEN_CODE --SELL_AMOUNT --XRP_PRICE_PER_TOKEN --SECRET_NUMBERS
     $secretNumbers = Get-WalletSecret
-    $result = python .\Sell-Token.py $tokenIssuer $tokenCode $tokensToSell $minPrice $secretNumbers
+    $result = python .\Scripts\Sell-Token.py $tokenIssuer $tokenCode $tokensToSell $minPrice $secretNumbers
     if($result -like "*tesSUCCESS*"){
         Write-Host "$($result)" -ForegroundColor Green
         if(!$noMessage){
