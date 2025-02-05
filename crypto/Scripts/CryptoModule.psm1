@@ -20,7 +20,7 @@ function Log-Price(){
         (
             [Parameter(Mandatory = $false)][string] $CurrentPrice,
             [Parameter(Mandatory = $false)][string] $TokenName,
-            [Parameter(Mandatory = $false)][string] $LogFolder = "E:\cmcke\Documents\Crypto\log\historic data"
+            [Parameter(Mandatory = $false)][string] $LogFolder = "E:\cmcke\Documents\Crypto\log"
         )
     $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     "$time,$CurrentPrice" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv

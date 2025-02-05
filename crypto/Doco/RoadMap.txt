@@ -4,11 +4,14 @@
 * Fix buyConditions
 * Config writeback
 * Release to others
+* Get dev balance
 
 
 	[MEDIUM TERM]
 * A GUI user interface
 * Improve doco and onboarding experiance 
+* Investigate 'confidence levels' for varing buyin amounts
+* Add modes (aggressive, safe, conservative)
 
 
 	[LONG TERM]
