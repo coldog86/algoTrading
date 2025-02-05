@@ -1854,8 +1854,7 @@ function Monitor-Alerts(){
         (
             [Parameter(Mandatory = $true)] $TelegramToken,
             [Parameter(Mandatory = $false)][switch] $Silent,          
-            [Parameter(Mandatory = $false)] $WaitTime = 300, # In seconds
-            [Parameter(Mandatory = $false)] $Count
+            [Parameter(Mandatory = $false)] $WaitTime = 600 # In seconds
         )
     $standardBuy = Get-StandardBuy
     $userTelegramGroup = Get-UserTelegramGroup
