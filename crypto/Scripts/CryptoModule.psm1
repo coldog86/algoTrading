@@ -237,7 +237,7 @@ function Set-Configuration(){
         [Parameter(Mandatory = $true)] $ConfigValue,
         [Parameter(Mandatory = $true)][string] $ConfigName,
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
-        [Parameter(Mandatory = $true)][switch] $Silent
+        [Parameter(Mandatory = $false)][switch] $Silent
     )
 
     $configContent = Get-Content -Path $filePath -Raw
