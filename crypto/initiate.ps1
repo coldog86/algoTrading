@@ -23,12 +23,14 @@ function setupBot(){
     # Set up config file    
     New-Item -Path .\config -Name config.txt # create blank config file    
     $walletAddress = Read-Host "Please enter wallet address (it will look something like this 'rDXgW8ZdcPwmSzEzK7s45V6xeSwuwgiVYG')"
-    Set-WalletAddress -WalletAddress $walletAddress
+    Set-Configuration -ConfigName WalletAddress -ConfigValue $walletAddress
     $secretNumbers = Read-Host "Please enter wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')"
     Set-WalletSecret -SecretNumbers $secretNumbers
     $userTelegramGroup = Read-Host "Please enter the name of the Telegram group you added the bot to" 
-    Set-UserTelegramGroup -UserTelegramGroup $userTelegramGroup
-    Set-AdminTelegramGroup -AdminTelegramGroup '@testgroupjbn121'
+    Set-Configuration -ConfigName UserTelegramGroup -ConfigValue $userTelegramGroup
+    Set-Configuration -ConfigName AdminTelegramGroup -ConfigValue '@testgroupjbn121'
+    $standardBuy = Read-Host "What do you want the standard buy in amount to be (in XRP)" 
+    Set-Configuration -ConfigName StandardBuy -ConfigValue $standardBuy
         
     # create scripts
     Create-PythonScripts
