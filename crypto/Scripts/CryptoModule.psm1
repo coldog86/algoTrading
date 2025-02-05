@@ -1825,7 +1825,7 @@ function Get-TelegramChat(){
     if(!$silent){
         Write-Host "UpdateID = $($updateId)" -ForegroundColor Magenta
     }
-    Set-Offset -Offset $updateId
+    Set-Offset -Offset $updateId -Silent
 
     if(!$silent){
         $alert = $response[$response.count -1].message.text
