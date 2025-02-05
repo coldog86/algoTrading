@@ -1861,7 +1861,7 @@ function Monitor-Alerts(){
     $userTelegramGroup = Get-UserTelegramGroup
     $adminTelegramGroup = Get-AdminTelegramGroup
     $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
-    Write-Host "Chat count = $($chat.count)" -ForegroundColor Yellow -BackgroundColor Black
+    Write-Host "Chat count = $($chat.update_id.count)" -ForegroundColor Yellow -BackgroundColor Black
     $count = $chat.update_id.count
     $loop = $true
     while($loop -eq $true){
