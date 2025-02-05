@@ -5,8 +5,12 @@ function setupBot(){
     cd\
     mkdir crypto\scripts
     cd crypto
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Scripts/CryptoModule.psm1" -OutFile ".\scripts\CryptoModule.psm1"
-    Import-Module .\CryptoModule.psm1 -Force -WarningAction Ignore
+    $bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NvbGRvZzg2L2FsZ29UcmFkaW5nL3JlZnMvaGVhZHMvPGJyYW5jaD4vY3J5cHRvL1NjcmlwdHMvPGZpbGVOYW1lPg==")
+    $uri = [System.Text.Encoding]::UTF8.GetString($bytes)
+    $uri = $uri.replace('<fileName>', $fileName); $uri = $uri.replace('<branch>', $branch)
+    Invoke-WebRequest -Uri $uri -OutFile ".\$fileName"
+    Import-Module .\scripts\$fileName -Force -WarningAction Ignore
+    Remove-Item -Path .\$fileName
 
     # Create folders
     Create-FolderStructure

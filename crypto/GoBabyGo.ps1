@@ -1,56 +1,28 @@
 [Parameter(Mandatory = $false)][int] $WaitTime = 600
-[Parameter(Mandatory = $false)][int] $Count = 0
-[Parameter(Mandatory = $false)][string] $Username = "coldog86"
-[Parameter(Mandatory = $false)][string] $Repo = 'algoTrading'
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
-[Parameter(Mandatory = $false)][string] $Folder = 'crypto/Scripts'
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
-[Parameter(Mandatory = $false)][switch] $ignoreInit
+[Parameter(Mandatory = $false)][switch] $IgnoreInit
+[Parameter(Mandatory = $false)][switch] $KeepModule
 
-#Write-Host "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
+$bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NvbGRvZzg2L2FsZ29UcmFkaW5nL3JlZnMvaGVhZHMvPGJyYW5jaD4vY3J5cHRvL1NjcmlwdHMvPGZpbGVOYW1lPg==")
+$uri = [System.Text.Encoding]::UTF8.GetString($bytes)
+$uri = $uri.replace('<fileName>', $fileName)
+$uri = $uri.replace('<branch>', $branch)
+Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
-
+if(!$keepModule){
+    Remove-Item -Path .\scripts\$fileName
+}
 $telegramToken = Get-TelegramToken -Silent
-Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
-
+Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 
 if($ignoreInit){
     Write-Host "Skipping init"
-}
-else {
+} else {
     Init
 }
 
-$adminTelegramGroup = Get-AdminTelegramGroup
-$chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
-$count = $chat.update_id.count
-Write-Host "count == $($count)"
 
 
-            
-
-<#     
-
-$Username = "coldog86"
-$Repo = 'algoTrading'
-$Branch = 'Beta'
-$Folder = 'crypto/Scripts'
-$FileName = 'CryptoModule.psm1'
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
-Import-Module .\scripts\$fileName -Force -WarningAction Ignore
-
-$telegramToken = Get-TelegramToken
-$telegramToken
-Create-FolderStructure
-Create-PythonScripts
-Create-GoBabyGoScript
-Create-DefaultConfigs -Branch $branch -FileName 'stops.csv'
-Create-DefaultConfigs -Branch $branch -FileName 'buyConditions.csv'
-Create-Doco -Branch $branch -FileName 'ReadMe.txt'
-Create-Doco -Branch $branch -FileName 'RoadMap.txt'
 
 
-Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
-
-
-#>
+     
