@@ -14,18 +14,15 @@ if(!$keepModule){
     Remove-Item -Path .\scripts\$fileName
 }
 $telegramToken = Get-TelegramToken -Silent
-Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
-
+Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 
 if($ignoreInit){
     Write-Host "Skipping init"
 } else {
     Init
 }
 
-$adminTelegramGroup = Get-AdminTelegramGroup
-$chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
-$count = $chat.update_id.count
-Write-Host "count == $($count)"
+
+
 
 
      
