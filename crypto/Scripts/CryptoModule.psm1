@@ -5,8 +5,6 @@ function init(){
     param (
         [Parameter(Mandatory = $true)][string] $Branch
     )
-    #Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Scripts/CryptoModule.psm1" -OutFile "scripts\CryptoModule.psm1"
-    #Import-Module .\scripts\CryptoModule.psm1 -Force -WarningAction Ignore
     # Create folders and files
     Create-FolderStructure
     Create-PythonScripts
@@ -35,10 +33,10 @@ function Create-DefaultConfigs(){
 
     foreach ($fileName in $fileNames){
         Write-Host "Creating default configs ($($fileName))"
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile "config\default\$($fileName)"   
+        $configFilePath = ".\config\$($fileName)"
+        $defaultFilePath = ".\config\default\$($fileName)"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile $defaultFilePath   
 
-        $configFilePath = "C:\config\$($fileName)"
-        $defaultFilePath = "C:\config\default\$($fileName)"
 
         # Check if the file exists in config folder, copy if not present
         if (!(Test-Path -Path $configFilePath)) {        
