@@ -14,13 +14,14 @@ if(!$keepModule){
     Remove-Item -Path .\scripts\$fileName
 }
 $telegramToken = Get-TelegramToken -Silent
-Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 
+
 if($ignoreInit){
     Write-Host "Skipping init"
 } else {
     Init
 }
 
+Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 
 
 
 
