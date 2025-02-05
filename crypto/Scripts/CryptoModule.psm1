@@ -238,7 +238,8 @@ function Get-StandardBuy() {
 function Set-Offset(){
     param (
         [Parameter(Mandatory = $true)][string] $Offset,
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $true)][switch] $Silent
     )
 
     $configContent = Get-Content -Path $filePath -Raw
@@ -246,11 +247,15 @@ function Set-Offset(){
     # Check if offset exists using regex
     if ($configContent -match "(?m)^\s*offset:\s*\d+") { 
         # Replace existing offset
-        Write-Host "Updating offset"
+        if(!$silent){
+           Write-Host "Updating offset"
+        }
         $configContent = $configContent -replace "(?m)^\s*offset:\s*\d+", "offset: $offset"
     } else {
         # Append offset with a new line
-        Write-Host "Appending offset"
+        if(!$silent){
+            Write-Host "Appending offset"
+        }
         $configContent += "`noffset: $offset"
     }
     # Save config
