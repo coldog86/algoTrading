@@ -7,8 +7,10 @@ function init(){
     )
     # Create folders and files
     Create-FolderStructure -Folders "config", "config\default", "Doco", "Log", "Log\Historic Data", "Scripts", "temp"
-    Create-PythonScripts
-    Create-GoBabyGoScript
+    Create-Script -Branch Beta -FileNames "Buy-Token.py", "Create-TrustLine.py", "Remove-TrustLine.py", "Sell-Token.py" -Folder '.\Scripts'
+    Create-Script -Branch Beta -FileNames "GoBabyGo.ps1" -Folder '.'
+    #Create-PythonScripts
+    #Create-GoBabyGoScript
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
     Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'
 }
@@ -422,12 +424,26 @@ function Get-TelegramToken {
     }
 }
 
+
+function Create-Script(){
+    param (
+        [Parameter(Mandatory = $false)][string] $Folder = ".\scripts",
+        [Parameter(Mandatory = $true)][string[]] $FileNames,
+        [Parameter(Mandatory = $false)][string] $Branch = 'main'
+    )
+
+    Write-Host "Creating $($fileName) script" -ForegroundColor Magenta
+    Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
+    $uri = "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/<branch>/crypto/Scripts/<fileName>"
+    $uri = $uri.replace('<fileName>', $fileName); $uri = $uri.replace('<branch>', $branch)
+    Invoke-WebRequest -Uri $uri -OutFile "$folder\$fileName"
+}
+
+
+
 function Create-BuyTokenScript(){
 
     Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    # $secret_numbers = "261821 244950 228027 024930 002940 326313 427315 043170"
-    $secret_numbers = Get-WalletSecret -Silent
-
 
 $pythonCode = @"
 import xrpl
