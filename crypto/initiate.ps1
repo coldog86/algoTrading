@@ -1,6 +1,7 @@
 function setupBot(){
     param (
-        [Parameter(Mandatory = $true)][string] $Branch
+        [Parameter(Mandatory = $false)][string] $Branch = 'main',
+        [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
     )
     cd\
     mkdir crypto\scripts
