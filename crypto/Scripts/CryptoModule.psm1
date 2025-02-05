@@ -232,7 +232,33 @@ function Get-StandardBuy() {
     }
 }
 
+function Set-Configuration(){
+    param (
+        [Parameter(Mandatory = $true)] $ConfigValue,
+        [Parameter(Mandatory = $true)][string] $ConfigName,
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $true)][switch] $Silent
+    )
 
+    $configContent = Get-Content -Path $filePath -Raw
+
+    # Check if offset exists using regex
+    if ($configContent -match "(?m)^\s*$($configName):\s*\d+") { 
+        # Replace existing offset
+        if(!$silent){
+           Write-Host "Updating ($($configName))"
+        }
+        $configContent = $configContent -replace "(?m)^\s*$($configName):\s*\d+", "$($configName): $configValue"
+    } else {
+        # Append offset with a new line
+        if(!$silent){
+            Write-Host "Appending $($configName)"
+        }
+        $configContent += "`n$($configName): $configValue"
+    }
+    # Save config
+    Set-Content -Path $filePath -Value $configContent
+}
 function Set-Offset(){
     param (
         [Parameter(Mandatory = $true)][string] $Offset,
@@ -731,31 +757,27 @@ function Create-GoBabyGoScript(){
     
     $script = @'
 [Parameter(Mandatory = $false)][int] $WaitTime = 600
-[Parameter(Mandatory = $false)][int] $Count = 0
-[Parameter(Mandatory = $false)][string] $Username = "coldog86"
-[Parameter(Mandatory = $false)][string] $Repo = 'algoTrading'
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
-[Parameter(Mandatory = $false)][string] $Folder = 'crypto/Scripts'
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
-[Parameter(Mandatory = $false)][switch] $ignoreInit
+[Parameter(Mandatory = $false)][switch] $IgnoreInit
+[Parameter(Mandatory = $false)][switch] $KeepModule
 
-#Write-Host "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$($username)/$($repo)/refs/heads/$($branch)/$($folder)/$($fileName)" -OutFile "scripts\$fileName"
+$bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NvbGRvZzg2L2FsZ29UcmFkaW5nL3JlZnMvaGVhZHMvPGJyYW5jaD4vY3J5cHRvL1NjcmlwdHMvPGZpbGVOYW1lPg==")
+$uri = [System.Text.Encoding]::UTF8.GetString($bytes)
+$uri = $uri.replace('<fileName>', $fileName)
+$uri = $uri.replace('<branch>', $branch)
+Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
-
-$telegramToken = Get-TelegramToken
-Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent -count $count
-
-if(!$ignoreInit){
-    init
+if(!$keepModule){
+    Remove-Item -Path .\scripts\$fileName
 }
-
-$adminTelegramGroup = Get-AdminTelegramGroup
-$chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup
-$count = $chat.update_id.count
-Write-Host "count == $($count)"
-
-
+$telegramToken = Get-TelegramToken -Silent
+Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 
+if($ignoreInit){
+    Write-Host "Skipping init"
+} else {
+    Init
+}
             
 '@
 
@@ -1828,7 +1850,7 @@ function Get-TelegramChat(){
     if(!$silent){
         Write-Host "UpdateID = $($updateId)" -ForegroundColor Magenta
     }
-    Set-Offset -Offset $updateId -Silent
+    Set-Configuration -ConfigName 'offset' -ConfigValue $updateId -Silent
 
     if(!$silent){
         $alert = $response[$response.count -1].message.text
