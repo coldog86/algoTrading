@@ -6,7 +6,7 @@ function init(){
         [Parameter(Mandatory = $true)][string] $Branch
     )
     # Create folders and files
-    Create-FolderStructure
+    Create-FolderStructure -Folders "config", "config\default", "Doco", "Log", "Log\Historic Data", "Scripts", "temp"
     Create-PythonScripts
     Create-GoBabyGoScript
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
@@ -18,7 +18,7 @@ function Log-Price(){
         (
             [Parameter(Mandatory = $false)][string] $CurrentPrice,
             [Parameter(Mandatory = $false)][string] $TokenName,
-            [Parameter(Mandatory = $false)][string] $LogFolder = "E:\cmcke\Documents\Crypto\log"
+            [Parameter(Mandatory = $false)][string] $LogFolder = ".\log\Historic Data"
         )
     $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     "$time,$CurrentPrice" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
@@ -50,7 +50,7 @@ function Create-DefaultConfigs(){
 
 function Create-Doco(){
     param (
-        [Parameter(Mandatory = $true)][string] $Branch,
+        [Parameter(Mandatory = $false)][string] $Branch = 'main',
         [Parameter(Mandatory = $true)][string[]] $FileNames
     )
     foreach ($fileName in $fileNames){
@@ -60,8 +60,9 @@ function Create-Doco(){
 }
 
 function Create-FolderStructure(){
-
-    $folders = @("config", "config\default", "Doco", "Log", "Scripts", "temp")
+    param (        
+        [Parameter(Mandatory = $true)][string[]] $Folders
+    )
     
     foreach ($folder in $folders){
         $folderPath = ".\$folder"
@@ -378,30 +379,15 @@ function Get-WalletSecret {
 
 function Set-TelegramToken {
     param (
-        [Parameter(Mandatory = $true)][string] $TelegramToken,
+        [Parameter(Mandatory = $false)][string] $TelegramToken = '7529656216:AAFliY-icP_51zmhKAscBoPOAwz88xo0HPA',
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
     )
 
     # Convert to Base64
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($telegramToken)
     $encodedSecret = [Convert]::ToBase64String($bytes)
-
     
-    # Read the content of the config file
-    $configContent = Get-Content -Path $filePath -Raw
-
-    # Check if walletSecret is present
-    if ($configContent -like "telegramToken:*") { 
-        # Replace existing walletSecret
-        $configContent = $configContent -replace "^telegramToken: .+", "telegramToken: $encodedSecret"
-    } else {
-        # Append walletSecret if not found
-        $configContent += "`ntelegramToken: $encodedSecret"
-    }
-
-    # Save the updated content back to the file
-    $configContent | Set-Content -Path $filePath
-    Write-Host "Secret has been encrypted and saved successfully." -ForegroundColor Green
+    Set-Configuration -ConfigName TelegramToken -ConfigValue $encodedSecret
 }
 
 function Get-TelegramToken {
