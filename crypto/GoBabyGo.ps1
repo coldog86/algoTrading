@@ -18,7 +18,7 @@ $telegramToken = Get-TelegramToken -Silent
 if($ignoreInit){
     Write-Host "Skipping init"
 } else {
-    Init
+    Init -Branch $branch
 }
 
 Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 

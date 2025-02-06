@@ -7,8 +7,8 @@ function init(){
     )
     # Create folders and files
     Create-FolderStructure -Folders "config", "config\default", "Doco", "Log", "Log\Historic Data", "Scripts", "temp"
-    Create-Script -Branch Beta -FileNames "Buy-Token.py", "Create-TrustLine.py", "Remove-TrustLine.py", "Sell-Token.py" -Folder '.\Scripts'
-    Create-Script -Branch Beta -FileNames "GoBabyGo.ps1" -Folder '.'
+    Create-Script -Branch $branch -FileNames "Buy-Token.py", "Create-TrustLine.py", "Remove-TrustLine.py", "Sell-Token.py" -Folder '.\Scripts'
+    Create-Script -Branch $branch -FileNames "GoBabyGo.ps1" -Folder '.'
     #Create-PythonScripts
     #Create-GoBabyGoScript
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
