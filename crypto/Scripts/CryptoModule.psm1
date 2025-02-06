@@ -842,6 +842,7 @@ function Sleep-WithPriceChecks {
     $buyConditions
     $seconds = $buyConditions.Seconds[$buyConditions.count-1]
 
+    Write-Host "Monitoring for $($seconds) seconds"
     $progressActivity = "Monitoring for $seconds seconds"
     $progressStatus = "Time remaining"
     # Array to track the percentage increases
