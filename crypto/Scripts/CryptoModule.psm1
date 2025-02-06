@@ -427,16 +427,18 @@ function Get-TelegramToken {
 
 function Create-Script(){
     param (
-        [Parameter(Mandatory = $false)][string] $Folder = ".\scripts",
+        [Parameter(Mandatory = $false)][string] $Folder = ".",
         [Parameter(Mandatory = $true)][string[]] $FileNames,
         [Parameter(Mandatory = $false)][string] $Branch = 'main'
     )
 
     foreach ($fileName in $fileNames){
         Write-Host "Creating $($fileName) script" -ForegroundColor Magenta
-        Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
         $uri = "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/<branch>/crypto/Scripts/<fileName>"
         $uri = $uri.replace('<fileName>', $fileName); $uri = $uri.replace('<branch>', $branch)
+        if($fileName -eq 'GoBabyGo.ps1'){
+            $uri = $uri.Replace('Scripts/','')
+        }
         Invoke-WebRequest -Uri $uri -OutFile "$folder\$fileName"
     }
 }
