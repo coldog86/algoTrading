@@ -432,11 +432,13 @@ function Create-Script(){
         [Parameter(Mandatory = $false)][string] $Branch = 'main'
     )
 
-    Write-Host "Creating $($fileName) script" -ForegroundColor Magenta
-    Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    $uri = "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/<branch>/crypto/Scripts/<fileName>"
-    $uri = $uri.replace('<fileName>', $fileName); $uri = $uri.replace('<branch>', $branch)
-    Invoke-WebRequest -Uri $uri -OutFile "$folder\$fileName"
+    foreach ($fileName in $fileNames){
+        Write-Host "Creating $($fileName) script" -ForegroundColor Magenta
+        Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
+        $uri = "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/<branch>/crypto/Scripts/<fileName>"
+        $uri = $uri.replace('<fileName>', $fileName); $uri = $uri.replace('<branch>', $branch)
+        Invoke-WebRequest -Uri $uri -OutFile "$folder\$fileName"
+    }
 }
 
 
