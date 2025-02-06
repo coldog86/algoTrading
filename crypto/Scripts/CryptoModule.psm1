@@ -840,7 +840,8 @@ function Sleep-WithPriceChecks {
     
     $buyConditions = Import-Csv -Path $buyConditionsFilePath
     $buyConditions
-    $seconds = $buyConditions.Seconds[$buyConditions.count-1]
+    $number = $buyConditions.count-1
+    $seconds = $buyConditions.Seconds[$number]
 
     Write-Host "Monitoring for $($seconds) seconds"
     $progressActivity = "Monitoring for $seconds seconds"
