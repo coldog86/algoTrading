@@ -1,4 +1,3 @@
-[Parameter(Mandatory = $false)][int] $WaitTime = 600
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
 [Parameter(Mandatory = $false)][switch] $IgnoreInit
@@ -21,7 +20,7 @@ if($ignoreInit){
     Init -Branch $branch
 }
 
-Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 
+Monitor-Alerts -TelegramToken $telegramToken -Silent 
 
 
 
