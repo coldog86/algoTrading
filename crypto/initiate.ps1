@@ -14,7 +14,7 @@ function setupBot(){
     Remove-Item -Path .\$fileName
 
     # Create folders
-    Create-FolderStructure
+    Create-FolderStructure -Folders "config", "config\default", "Doco", "Log", "Log\Historic Data", "Scripts", "temp"
 
     # Create default running config
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
@@ -33,8 +33,8 @@ function setupBot(){
     Set-Configuration -ConfigName StandardBuy -ConfigValue $standardBuy
         
     # create scripts
-    Create-PythonScripts
-    Create-GoBabyGoScript
+    Create-Script -Branch $branch -FileNames "Buy-Token.py", "Create-TrustLine.py", "Remove-TrustLine.py", "Sell-Token.py" -Folder '.\Scripts'
+    Create-Script -Branch $branch -FileNames "GoBabyGo.ps1" -Folder '.'
 }
 
 setupBot

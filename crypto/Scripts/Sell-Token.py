@@ -7,9 +7,6 @@ from xrpl.transaction import sign_and_submit
 import argparse
 import math
 
-
-# PROOF WE ARE WORKING RIGHT
-
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description="Sell a token for XRP on the XRP Ledger.")
 parser.add_argument("TOKEN_ISSUER", help="Issuer address for the token")
