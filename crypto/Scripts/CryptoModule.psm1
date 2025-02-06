@@ -924,6 +924,7 @@ function Monitor-NewTokenPrice(){
         return $action
     }
 
+    write-host "******** DOES THIS CODE EVER RUN ????????????????????"
     [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
 
     if($newPrice -gt $initialPrice){
@@ -1553,7 +1554,7 @@ function Monitor-Alerts(){
                     $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
                     $count = $chat.update_id.count
                     
-                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
+                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count"
 
                     # Send alert
                     Send-TelegramMessage -ChatId $userTelegramGroup -Message "New token - $($tokenName)"
@@ -1562,11 +1563,7 @@ function Monitor-Alerts(){
 
                     # Get the initial price of the new token                    
                     [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-                    # check a price was returned
-                    if($initialPrice -eq -1){
-                        Write-Host "Token code not right, skipping token. TokenCode = $($tokenCode)" -ForegroundColor Red
-                        break OuterLoop  
-                    }
+                    
                     while($null -eq $initialPrice){
                         [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
                     }
@@ -1591,7 +1588,7 @@ function Monitor-Alerts(){
                     } 
                     if($action -eq 'abandone'){
                         Write-Host "Token lost money, abandoning token" -ForegroundColor Red
-                        ExitShell
+                        #ExitShell
                     }
                 }
             #}

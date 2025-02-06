@@ -1,7 +1,6 @@
 	[SHORT TERM]
 * Release to Kris
 * Fix slipage 
-* Fix buyConditions
 * Config writeback
 * Release to others
 * Get dev balance
