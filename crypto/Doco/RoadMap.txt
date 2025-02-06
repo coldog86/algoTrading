@@ -5,6 +5,7 @@
 * Config writeback
 * Release to others
 * Get dev balance
+* Get number of holders
 
 
 	[MEDIUM TERM]

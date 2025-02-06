@@ -829,13 +829,18 @@ function Sleep-WithProgress {
 
 
 function Sleep-WithPriceChecks {
-    param (
-        [Parameter(Mandatory = $true)] [int]$Seconds,        
-        [Parameter(Mandatory = $true)] [double]$InitialPrice,           
+    param (        
+        [Parameter(Mandatory = $true)][double] $InitialPrice,           
         [Parameter(Mandatory = $true)] $TokenCode,        
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
-        [Parameter(Mandatory = $false)] [int]$StartIncriment = 0
+        [Parameter(Mandatory = $false)][int] $StartIncriment = 0,
+        [Parameter(Mandatory = $false)][string] $BuyConditionsFilePath = '.\config\buyConditions.csv'
     )
+
+    
+    $buyConditions = Import-Csv -Path $buyConditionsFilePath
+    $buyConditions
+    $seconds = $buyConditions.Seconds[$buyConditions.count-1]
 
     $progressActivity = "Monitoring for $seconds seconds"
     $progressStatus = "Time remaining"
@@ -850,14 +855,13 @@ function Sleep-WithPriceChecks {
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
         [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100)
         
-        # Track the percentage increase
+        # Track the percentage increase for last 2 iterations
         $percentageHistory += $percentageIncrease
         if ($percentageHistory.Count -gt 2) {
-            # Keep only the last two values
             $percentageHistory = $percentageHistory[-2..-1]
         }
 
-        # Add this check before setting the action to buy
+        # Add this check to only buy if price has not jumped +50% in the last 2 iterations
         if ($percentageHistory.Count -eq 2) {
             $lastIncreaseDiff = [math]::Abs($percentageHistory[-1] - $percentageHistory[-2])
             if ($lastIncreaseDiff -gt 50) {
@@ -866,64 +870,34 @@ function Sleep-WithPriceChecks {
             }
         }
 
+        # Every 10 iterations show total percentage change
         if($i % 10 -eq 0){
             Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
         }
-        if($i -gt 10 -and $i -lt 20){
-            # if the price has gone up 200% buy
-            if($percentageIncrease -gt 200){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current  Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action
+
+        # Work out the required percentage increase as per buy conditions CSV
+        $percentageIncreaseRequired = 250
+        foreach ($buyCondition in $buyConditions){
+            if($i -lt $buyCondition.Seconds){
+                $percentageIncreaseRequired = $buyCondition.BuyCondition
+                Write-Host "percentageIncreaseRequired = $($percentageIncreaseRequired)"
+                break
             }
         }
-        if($i -gt 20 -and $i -lt 90){  # if the price has gone up 125% buy
-            if($percentageIncrease -gt 125){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action
-            }            
+
+        # Buy logic
+        if($percentageIncrease -gt $percentageIncreaseRequired){
+            Write-Host "Price increase" -ForegroundColor Green
+            Write-Host "Current  Price = $($newPrice)"
+            Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
+            Write-Host "Buy token" -ForegroundColor Green
+            $action = "buy"
+            Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
+            # Stop and remove the progress bar
+            Write-Progress -Activity "Processing" -Completed
+            return $action
         }
-        if($i -gt 90 -and $i -lt 240){
-            # if the price has gone up 100% buy            
-            if($percentageIncrease -gt 100){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current  Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action               
-            }
-        }
-        if($i -gt 240 -and $i -lt $seconds){ 
-            # if the price has gone up 100% buy
-            if($percentageIncrease -gt 100){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current  Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action                
-            }
-        }
+        
         Write-Progress -Activity $progressActivity -Status "$progressStatus : $timeRemaining seconds" -PercentComplete $percentComplete
         Start-Sleep -Seconds 1
     }
@@ -938,14 +912,13 @@ function Monitor-NewTokenPrice(){
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
         [Parameter(Mandatory = $true)] [double] $InitialPrice,
-        [Parameter(Mandatory = $true)] $WaitTime,
         [Parameter(Mandatory = $false)] $StartIncriment = 0
     )
 
     Write-Host "Initial Price = $($initialPrice)" -ForegroundColor Yellow
     Write-Host "Waiting for $($waitTime) seconds"
     
-    $action = Sleep-WithPriceChecks -Seconds $waitTime -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment
+    $action = Sleep-WithPriceChecks -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment
     
     if($action -eq "buy"){
         return $action
@@ -1598,10 +1571,10 @@ function Monitor-Alerts(){
                         [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
                     }
 
-                    # Monitor the token to see if price has increases within $waitTime (in seconds)
-                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -WaitTime $waitTime                    
+                    # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
+                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice                  
                     while($action -eq 'hold'){
-                        $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -WaitTime $waitTime -StartIncriment 240                      
+                        $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment 240                      
                     }
                     if($action -eq 'buy'){
                         Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
