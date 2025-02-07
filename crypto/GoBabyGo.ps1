@@ -1,5 +1,7 @@
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
 [Parameter(Mandatory = $false)][switch] $UseDefaultConfig
+[Parameter(Mandatory = $false)][switch] $NoWriteBack
+[Parameter(Mandatory = $false)][switch] $NoClip
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
 [Parameter(Mandatory = $false)][switch] $IgnoreInit
 
