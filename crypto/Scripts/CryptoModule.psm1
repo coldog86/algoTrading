@@ -598,10 +598,12 @@ function Recover-BuyIn() {
         Write-Host "Sell percentage to recover intial stake = $($amountOfTokenToSell)%" -BackgroundColor Black
 
         while ($newPrice -gt $stopLowerLimit -and $newPrice -lt $stopUpperLimit) {
+            $i++
             Start-Sleep -Seconds 5
             [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-            $currentTime = Get-Date        
-            if ($currentTime.Second % 30 -eq 0) {
+           
+            # Every 10 iterations show total percentage change
+            if($i % 10 -eq 0){
                 [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
                 Write-Host "$($tokenName) has changed $($percentageIncrease)%" -ForegroundColor Magenta
                 Start-Sleep -Seconds 1 # Small delay to avoid multiple writes in the same second
@@ -644,10 +646,12 @@ function SellConservativly() {
     Write-Host "Stop lower limit = $($stopLowerLimit)" -ForegroundColor DarkYellow
 
     while ($newPrice -gt $stopLowerLimit -and $newPrice -lt $stopUpperLimit) {
+        $i++
         Start-Sleep -Seconds 5
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer        
-        $currentTime = Get-Date        
-        if ($currentTime.Second % 30 -eq 0) {
+        
+        # Every 10 iterations show total percentage change
+        if($i % 10 -eq 0){
             [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
             Write-Host "$($tokenName) has changed $($percentageIncrease)%" -ForegroundColor Magenta
             Start-Sleep -Seconds 1 # Small delay to avoid multiple writes in the same second
@@ -699,14 +703,18 @@ function Monitor-EstablishedPosition {
         
         #Loop while you're in the stop
         while ($newPrice -gt $stopLowerLimit -and $newPrice -lt $stopUpperLimit) {
+            $i++
             Start-Sleep -Seconds 5
             Write-Host "*** At stop $($stopNumber) ***"
-            [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-            $currentTime = Get-Date        
-            if ($currentTime.Second % 30 -eq 0) {
+            [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer 
+            
+            # Every 10 iterations show total percentage change
+            if($i % 10 -eq 0){
                 [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
                 Write-Host "$($tokenName) has changed $($percentageIncrease)%" -ForegroundColor Magenta
                 Start-Sleep -Seconds 1 # Small delay to avoid multiple writes in the same second
+                Write-Host "Stop $($stopNumber) upper limit = $($stopUpperLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
+                Write-Host "Stop $($stopNumber) lower limit = $($stopLowerLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
             }       
         }       
         
@@ -883,7 +891,6 @@ function Sleep-WithPriceChecks {
         foreach ($buyCondition in $buyConditions){
             if($i -lt $buyCondition.Seconds){
                 $percentageIncreaseRequired = $buyCondition.BuyCondition
-                Write-Host "percentageIncreaseRequired = $($percentageIncreaseRequired)"
                 break
             }
         }
@@ -1584,8 +1591,8 @@ function Monitor-Alerts(){
                         #Monitor-NewPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
                         Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn
                         #Monitor-ExistingPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                        SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime
-                        Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
+                        #SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime
+                        #Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
                         $loop = $false
                         break
                     } 
