@@ -875,6 +875,7 @@ function Sleep-WithPriceChecks {
         # Every 10 iterations show total percentage change
         if($i % 10 -eq 0){
             Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
+            Write-Host "percentageIncreaseRequired = $($percentageIncreaseRequired)" -ForegroundColor Magenta
         }
 
         # Work out the required percentage increase as per buy conditions CSV
@@ -1590,7 +1591,7 @@ function Monitor-Alerts(){
                     } 
                     if($action -eq 'abandone'){
                         Write-Host "Token lost money, abandoning token" -ForegroundColor Red
-                        #ExitShell
+                        ExitShell
                     }
                 }
             #}

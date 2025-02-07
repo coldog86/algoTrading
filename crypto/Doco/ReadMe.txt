@@ -25,13 +25,13 @@ To achieve this we want to use a diverse group of testers each developing their 
 2. Run GoBabyGo to start the bot (./GoBabyGo.ps1)
 
 	[Paramaters]
-	Paramaters are passed at runtime like this GoBabyGo.ps1 -WaitTime 10 -Branch main
+	Paramaters are passed at runtime like this GoBabyGo.ps1 -UseDefaultConfig -Branch main
 	There are no manditory paramaters. Below outlines what each does and their default values. 
-	-WaitTime
-		Purpose: This is how long the bot will monitor a new coin for. 
-		Default value: 600 (seconds)
-		Accepted values: Integers i.e. Whole digit positive numbers
-		Note: This value is in seconds.
+	-UseDefaultConfig
+		Purpose: Use the config files that are stored .\config\default 
+		Default value: False
+		Accepted values: This is a switch, it doesn't take values. Just add it to the end of the call (GoBabyGo.ps1 -UseDefaultConfig).
+		Note: These configurations will change randomly as updates are released. 
 	-Branch 
 		Purpose: This specifies which GitHub branch to run. Beta is where the latest code will be. The more stable branch would be 'main'
 		Default value: 'Beta'
