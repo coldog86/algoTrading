@@ -6,9 +6,11 @@ function init(){
         [Parameter(Mandatory = $true)][string] $Branch
     )
     # Create folders and files
-    Create-FolderStructure
-    Create-PythonScripts
-    Create-GoBabyGoScript
+    Create-FolderStructure -Folders "config", "config\default", "Doco", "Log", "Log\Historic Data", "Scripts", "temp"
+    Create-Script -Branch $branch -FileNames "Buy-Token.py", "Create-TrustLine.py", "Remove-TrustLine.py", "Sell-Token.py" -Folder '.\Scripts'
+    Create-Script -Branch $branch -FileNames "GoBabyGo.ps1" -Folder '.'
+    #Create-PythonScripts
+    #Create-GoBabyGoScript
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
     Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'
 }
@@ -18,7 +20,7 @@ function Log-Price(){
         (
             [Parameter(Mandatory = $false)][string] $CurrentPrice,
             [Parameter(Mandatory = $false)][string] $TokenName,
-            [Parameter(Mandatory = $false)][string] $LogFolder = "E:\cmcke\Documents\Crypto\log"
+            [Parameter(Mandatory = $false)][string] $LogFolder = ".\log\Historic Data"
         )
     $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     "$time,$CurrentPrice" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
@@ -50,7 +52,7 @@ function Create-DefaultConfigs(){
 
 function Create-Doco(){
     param (
-        [Parameter(Mandatory = $true)][string] $Branch,
+        [Parameter(Mandatory = $false)][string] $Branch = 'main',
         [Parameter(Mandatory = $true)][string[]] $FileNames
     )
     foreach ($fileName in $fileNames){
@@ -60,8 +62,9 @@ function Create-Doco(){
 }
 
 function Create-FolderStructure(){
-
-    $folders = @("config", "config\default", "Doco", "Log", "Scripts", "temp")
+    param (        
+        [Parameter(Mandatory = $true)][string[]] $Folders
+    )
     
     foreach ($folder in $folders){
         $folderPath = ".\$folder"
@@ -378,30 +381,15 @@ function Get-WalletSecret {
 
 function Set-TelegramToken {
     param (
-        [Parameter(Mandatory = $true)][string] $TelegramToken,
+        [Parameter(Mandatory = $false)][string] $TelegramToken = '7529656216:AAFliY-icP_51zmhKAscBoPOAwz88xo0HPA',
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
     )
 
     # Convert to Base64
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($telegramToken)
     $encodedSecret = [Convert]::ToBase64String($bytes)
-
     
-    # Read the content of the config file
-    $configContent = Get-Content -Path $filePath -Raw
-
-    # Check if walletSecret is present
-    if ($configContent -like "telegramToken:*") { 
-        # Replace existing walletSecret
-        $configContent = $configContent -replace "^telegramToken: .+", "telegramToken: $encodedSecret"
-    } else {
-        # Append walletSecret if not found
-        $configContent += "`ntelegramToken: $encodedSecret"
-    }
-
-    # Save the updated content back to the file
-    $configContent | Set-Content -Path $filePath
-    Write-Host "Secret has been encrypted and saved successfully." -ForegroundColor Green
+    Set-Configuration -ConfigName TelegramToken -ConfigValue $encodedSecret
 }
 
 function Get-TelegramToken {
@@ -436,355 +424,23 @@ function Get-TelegramToken {
     }
 }
 
-function Create-BuyTokenScript(){
 
-    Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    # $secret_numbers = "261821 244950 228027 024930 002940 326313 427315 043170"
-    $secret_numbers = Get-WalletSecret -Silent
-
-
-$pythonCode = @"
-import xrpl
-import argparse
-from xrpl.clients import JsonRpcClient
-from xrpl.wallet import Wallet
-from xrpl.models.transactions import OfferCreate
-from xrpl.models.amounts import IssuedCurrencyAmount
-from xrpl.transaction import sign_and_submit
-
-# Setup command-line argument parsing
-parser = argparse.ArgumentParser(description='Create an XRP OfferCreate transaction.')
-parser.add_argument('--xrp_amount', type=float, required=True, help='Amount of XRP to spend.')
-parser.add_argument('--token_amount', type=str, required=True, help='Amount of the token to receive.')
-parser.add_argument('--token_issuer', type=str, required=True, help='Issuer of the token.')
-parser.add_argument('--token_code', type=str, required=True, help='Token code (currency).')
-parser.add_argument("--secret_numbers", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
-args = parser.parse_args()
-
-# Setup - Define the XRPL Client
-client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
-
-# Set the parameters from the command line arguments
-XRP_AMOUNT = args.xrp_amount
-TOKEN_AMOUNT = args.token_amount
-TOKEN_ISSUER = args.token_issuer
-TOKEN_CODE = args.token_code
-SECRET_NUMBERS = args.secret_numbers
-
-# Get wallet
-wallet = Wallet.from_secret_numbers(SECRET_NUMBERS)
-#print(wallet)
-
-XRP_AMOUNT_IN_DROPS = str(int(XRP_AMOUNT * 1_000_000))  # Convert XRP amount to drops
-
-# Define taker_pays as an IssuedCurrencyAmount
-taker_pays = IssuedCurrencyAmount(
-    currency=TOKEN_CODE,
-    issuer=TOKEN_ISSUER,
-    value=TOKEN_AMOUNT
-)
-
-# Build an OfferCreate transaction
-offer = OfferCreate(
-    account=wallet.classic_address,
-    taker_gets=XRP_AMOUNT_IN_DROPS,
-    taker_pays=taker_pays,
-    flags=65536  # Optional flags: 131072 for sell offers, 65536 for buy, 0 for regular offer (buy or sell depending on other parameters)
-)
-
-# Sign and submit the transaction
-signed_tx = sign_and_submit(offer, client, wallet)
-
-#print(signed_tx.result)
-
-if "engine_result" in signed_tx.result:
-    if signed_tx.result["engine_result"] == "tesSUCCESS":
-        print(f"Transaction Result: {signed_tx.result['engine_result']}")
-        gets = signed_tx.result['tx_json']['TakerGets']
-        pays = signed_tx.result['tx_json']['TakerPays']['value']
-
-        xrp_value = int(gets) / 1_000_000
-        buy_price = float(pays) / xrp_value
-
-        print(f"BuyPrice = {buy_price:.12f}")
-        
-    else:
-        print(f"Transaction failed or returned a different result: {signed_tx.result['engine_result']}")
-        print(signed_tx.result)
-else:
-    print("Transaction did not return 'engine_result'. Here is the full response:")
-    print(signed_tx.result)
-
-
-"@
-
-    # Save the script to a temporary file
-    $tempScript = ".\scripts\Buy-Token.py"
-    $pythonCode | Set-Content -Path $tempScript
-}
-
-
-function Create-SellTokenScript(){
-
-
-    Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    $secret_numbers = Get-WalletSecret -Silent
-
-    $pythonCode = @"
-import xrpl
-from xrpl.clients import JsonRpcClient
-from xrpl.wallet import Wallet
-from xrpl.models.transactions import OfferCreate
-from xrpl.models.amounts import IssuedCurrencyAmount
-from xrpl.transaction import sign_and_submit
-import argparse
-import math
-
-
-# Parse command-line arguments
-parser = argparse.ArgumentParser(description="Sell a token for XRP on the XRP Ledger.")
-parser.add_argument("TOKEN_ISSUER", help="Issuer address for the token")
-parser.add_argument("TOKEN_CODE", help="Currency code for the token")
-parser.add_argument("SELL_AMOUNT", type=float, help="Amount of the token to sell")
-parser.add_argument("XRP_PRICE_PER_TOKEN", type=float, help="Price per token in XRP")
-parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
-args = parser.parse_args()
-
-# Setup - Define the XRPL Client
-client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
-
-# Extract values from arguments
-TOKEN_ISSUER = args.TOKEN_ISSUER
-TOKEN_CODE = args.TOKEN_CODE
-SELL_AMOUNT = str(args.SELL_AMOUNT)
-secret_numbers = args.SECRET_NUMBERS
-
-XRP_PRICE_PER_TOKEN = args.XRP_PRICE_PER_TOKEN
-XRP_PRICE_IN_DROPS = float(XRP_PRICE_PER_TOKEN * 1_000_000)
-
-# Get wallet
-wallet = Wallet.from_secret_numbers(secret_numbers)
-#print(wallet)
-
-# Check for NaN and invalid values
-if math.isnan(XRP_PRICE_IN_DROPS) or math.isnan(float(SELL_AMOUNT)):
-    raise ValueError("XRP_PRICE_IN_DROPS or SELL_AMOUNT is NaN or invalid")
-
-# Ensure both values are numeric and proceed
-try:
-    XRP_PRICE_IN_DROPS = float(XRP_PRICE_IN_DROPS)  # Ensure it's a float
-    SELL_AMOUNT = float(SELL_AMOUNT)  # Ensure it's a float
-      
-    # Calculate total XRP in drops
-    taker_pays = str(int(XRP_PRICE_IN_DROPS * SELL_AMOUNT))
-    print(f"Taker pays: {taker_pays} drops")
-except ValueError as e:
-    print(f"Error: {e}")
-
-# Define taker_pays as the amount of XRP you expect to receive
-taker_pays = str(int(XRP_PRICE_IN_DROPS * float(SELL_AMOUNT)))  # Total XRP in drops
-
-# Define taker_pays as an IssuedCurrencyAmount
-taker_gets = IssuedCurrencyAmount(
-    currency=TOKEN_CODE,
-    issuer=TOKEN_ISSUER,
-    value=SELL_AMOUNT
-)
-
-# Build an OfferCreate transaction
-offer = OfferCreate(
-    account=wallet.classic_address,
-    taker_gets=taker_gets,
-    taker_pays=taker_pays,
-    flags=131072   # Sell offer
-)
-
-# Sign and submit the transaction
-signed_tx = sign_and_submit(offer, client, wallet)
-
-if "engine_result" in signed_tx.result:
-    if signed_tx.result["engine_result"] == "tesSUCCESS":
-        print(f"Transaction Result: {signed_tx.result['engine_result']}")
-    else:
-        print(f"Transaction failed or returned a different result: {signed_tx.result['engine_result']}")        
-else:
-    print("Transaction did not return 'engine_result'. Here is the full response:")
-    print(signed_tx.result)
-
-"@
-
-    # Save the script to a temporary file
-    $tempScript = ".\scripts\Sell-Token.py"
-    $pythonCode | Set-Content -Path $tempScript
-
-}
-
-function Create-CreateTrustLineScript(){
-
-    Write-Host "Creating Buy-Token script" -ForegroundColor Magenta
-    $secret_numbers = Get-WalletSecret -Silent
-
-    $pythonCode = @"
-import xrpl
-from xrpl.wallet import Wallet
-from xrpl.models.transactions import TrustSet
-from xrpl.models.amounts import IssuedCurrencyAmount
-from xrpl.transaction import sign_and_submit
-from xrpl.clients import JsonRpcClient
-import argparse
-
-# Set up command-line arguments
-parser = argparse.ArgumentParser(description="Create a TrustSet transaction on the XRP Ledger.")
-parser.add_argument("issuer", help="Issuer address for the token")
-parser.add_argument("currency_code", help="Currency code for the token")
-parser.add_argument("trust_limit", help="Trust limit to set")
-parser.add_argument("secret_numbers", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
-args = parser.parse_args()
-
-# Configuration
-client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
-
-# Token details from arguments
-issuer = args.issuer
-currency_code = args.currency_code
-trust_limit = args.trust_limit
-secret_numbers = args.secret_numbers
-
-# Get wallet
-wallet = Wallet.from_secret_numbers(secret_numbers)
-
-# Fetch account info to get the sequence number
-account_info = client.request(xrpl.models.requests.AccountInfo(account=wallet.classic_address))
-sequence = account_info.result['account_data']['Sequence']
-
-# Create the TrustSet transaction
-trust_set_tx = TrustSet(
-    account=wallet.classic_address,
-    limit_amount=IssuedCurrencyAmount(
-        currency=currency_code,
-        issuer=issuer,
-        value=trust_limit
-    ),
-    fee="10",  # Transaction fee in drops
-    #flags=xrpl.models.transactions.TrustSetFlag.tfSetNoRipple, # Disable rippling
-    flags=xrpl.models.transactions.TrustSetFlag.TF_SET_NO_RIPPLE,
-    sequence=sequence
-)
-
-# Sign and submit the transaction
-response = sign_and_submit(trust_set_tx, client, wallet)
-
-# Check the result
-if response.result['engine_result'] == 'tesSUCCESS':
-    print(f"Trust line successfully established with hash: {response.result['tx_json']['hash']}")
-else:
-    print(f"Transaction failed with result: {response.result['engine_result_message']}")
-
-
-"@
-
-    # Save the script to a temporary file
-    $tempScript = ".\scripts\Create-TrustLine.py"
-    $pythonCode | Set-Content -Path $tempScript
-}
-
-function Create-RemoveTrustLineScript(){
-
-    Write-Host "Creating Remove-TrustLine script" -ForegroundColor Magenta
-    $secret_numbers = Get-WalletSecret -Silent
-    $pythonCode = @"
-import xrpl
-from xrpl.clients import JsonRpcClient
-from xrpl.wallet import Wallet
-from xrpl.models.transactions import TrustSet
-from xrpl.models.amounts import IssuedCurrencyAmount
-from xrpl.transaction import sign_and_submit
-import argparse
-
-# Parse command-line arguments
-parser = argparse.ArgumentParser(description="Remove a trust line on the XRP Ledger.")
-parser.add_argument("ISSUER", help="Issuer address for the token")
-parser.add_argument("CURRENCY_CODE", help="Currency code for the token")
-parser.add_argument("SECRET_NUMBERS", help="wallet secret numbers (it must look something like this '261821 261821 261821 261821 261821 261821 261821 261821')")
-args = parser.parse_args()
-
-# Setup - Define the XRPL Client
-client = JsonRpcClient("https://s1.ripple.com:51234")  # Mainnet JSON-RPC endpoint
-
-# Get wallet (replace with actual secret or secure method)
-secret_numbers = args.SECRET_NUMBERS
-wallet = Wallet.from_secret_numbers(secret_numbers)
-
-# Token details from arguments
-ISSUER = args.ISSUER
-CURRENCY_CODE = args.CURRENCY_CODE
-
-# Fetch account info to get the sequence number
-account_info = client.request(xrpl.models.requests.AccountInfo(account=wallet.classic_address))
-sequence = account_info.result['account_data']['Sequence']
-
-# Create the TrustSet transaction with a limit of zero to remove the trust line
-trust_set_tx = TrustSet(
-    account=wallet.classic_address,
-    limit_amount=IssuedCurrencyAmount(
-        currency=CURRENCY_CODE,
-        issuer=ISSUER,
-        value="0"
-    ),
-    fee="10",  # Transaction fee in drops
-    sequence=sequence
-)
-
-# Sign and submit the transaction
-signed_tx = sign_and_submit(trust_set_tx, client, wallet)
-
-# Check the result
-if signed_tx.result['engine_result'] == 'tesSUCCESS':
-    print(f"Trust line successfully removed with hash: {signed_tx.result['tx_json']['hash']}")
-else:
-    print(f"Transaction failed with result: {signed_tx.result['engine_result_message']}")
-
-"@
-
-    # Save the script to a temporary file
-    $tempScript = ".\scripts\Remove-TrustLine.py"
-    $pythonCode | Set-Content -Path $tempScript
-}
-
-function Create-GoBabyGoScript(){
-    
-    Write-Host "Creating GoBabyGo script" -ForegroundColor Magenta
-    
-    $script = @'
-[Parameter(Mandatory = $false)][int] $WaitTime = 600
-[Parameter(Mandatory = $false)][string] $Branch = 'Beta'
-[Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
-[Parameter(Mandatory = $false)][switch] $IgnoreInit
-[Parameter(Mandatory = $false)][switch] $KeepModule
-
-$bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NvbGRvZzg2L2FsZ29UcmFkaW5nL3JlZnMvaGVhZHMvPGJyYW5jaD4vY3J5cHRvL1NjcmlwdHMvPGZpbGVOYW1lPg==")
-$uri = [System.Text.Encoding]::UTF8.GetString($bytes)
-$uri = $uri.replace('<fileName>', $fileName)
-$uri = $uri.replace('<branch>', $branch)
-Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
-Import-Module .\scripts\$fileName -Force -WarningAction Ignore
-if(!$keepModule){
-    Remove-Item -Path .\scripts\$fileName
-}
-$telegramToken = Get-TelegramToken -Silent
-Monitor-Alerts -TelegramToken $telegramToken -WaitTime $waitTime -Silent 
-if($ignoreInit){
-    Write-Host "Skipping init"
-} else {
-    Init
-}
-            
-'@
-
-    # Save the script to a temporary file
-    $tempScript = ".\GoBabyGo.ps1"
-    $script | Set-Content -Path $tempScript
-
+function Create-Script(){
+    param (
+        [Parameter(Mandatory = $false)][string] $Folder = ".",
+        [Parameter(Mandatory = $true)][string[]] $FileNames,
+        [Parameter(Mandatory = $false)][string] $Branch = 'main'
+    )
+
+    foreach ($fileName in $fileNames){
+        Write-Host "Creating $($fileName) script" -ForegroundColor Magenta
+        $uri = "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/<branch>/crypto/Scripts/<fileName>"
+        $uri = $uri.replace('<fileName>', $fileName); $uri = $uri.replace('<branch>', $branch)
+        if($fileName -eq 'GoBabyGo.ps1'){
+            $uri = $uri.Replace('Scripts/','')
+        }
+        Invoke-WebRequest -Uri $uri -OutFile "$folder\$fileName"
+    }
 }
 
 function Log-Price(){
@@ -942,10 +598,12 @@ function Recover-BuyIn() {
         Write-Host "Sell percentage to recover intial stake = $($amountOfTokenToSell)%" -BackgroundColor Black
 
         while ($newPrice -gt $stopLowerLimit -and $newPrice -lt $stopUpperLimit) {
+            $i++
             Start-Sleep -Seconds 5
             [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-            $currentTime = Get-Date        
-            if ($currentTime.Second % 30 -eq 0) {
+           
+            # Every 10 iterations show total percentage change
+            if($i % 10 -eq 0){
                 [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
                 Write-Host "$($tokenName) has changed $($percentageIncrease)%" -ForegroundColor Magenta
                 Start-Sleep -Seconds 1 # Small delay to avoid multiple writes in the same second
@@ -988,10 +646,12 @@ function SellConservativly() {
     Write-Host "Stop lower limit = $($stopLowerLimit)" -ForegroundColor DarkYellow
 
     while ($newPrice -gt $stopLowerLimit -and $newPrice -lt $stopUpperLimit) {
+        $i++
         Start-Sleep -Seconds 5
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer        
-        $currentTime = Get-Date        
-        if ($currentTime.Second % 30 -eq 0) {
+        
+        # Every 10 iterations show total percentage change
+        if($i % 10 -eq 0){
             [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
             Write-Host "$($tokenName) has changed $($percentageIncrease)%" -ForegroundColor Magenta
             Start-Sleep -Seconds 1 # Small delay to avoid multiple writes in the same second
@@ -1043,14 +703,18 @@ function Monitor-EstablishedPosition {
         
         #Loop while you're in the stop
         while ($newPrice -gt $stopLowerLimit -and $newPrice -lt $stopUpperLimit) {
+            $i++
             Start-Sleep -Seconds 5
             Write-Host "*** At stop $($stopNumber) ***"
-            [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-            $currentTime = Get-Date        
-            if ($currentTime.Second % 30 -eq 0) {
+            [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer 
+            
+            # Every 10 iterations show total percentage change
+            if($i % 10 -eq 0){
                 [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
                 Write-Host "$($tokenName) has changed $($percentageIncrease)%" -ForegroundColor Magenta
                 Start-Sleep -Seconds 1 # Small delay to avoid multiple writes in the same second
+                Write-Host "Stop $($stopNumber) upper limit = $($stopUpperLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
+                Write-Host "Stop $($stopNumber) lower limit = $($stopLowerLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
             }       
         }       
         
@@ -1173,14 +837,21 @@ function Sleep-WithProgress {
 
 
 function Sleep-WithPriceChecks {
-    param (
-        [Parameter(Mandatory = $true)] [int]$Seconds,        
-        [Parameter(Mandatory = $true)] [double]$InitialPrice,           
+    param (        
+        [Parameter(Mandatory = $true)][double] $InitialPrice,           
         [Parameter(Mandatory = $true)] $TokenCode,        
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
-        [Parameter(Mandatory = $false)] [int]$StartIncriment = 0
+        [Parameter(Mandatory = $false)][int] $StartIncriment = 0,
+        [Parameter(Mandatory = $false)][string] $BuyConditionsFilePath = '.\config\buyConditions.csv'
     )
 
+    
+    $buyConditions = Import-Csv -Path $buyConditionsFilePath
+    $buyConditions
+    $number = $buyConditions.count-1
+    $seconds = $buyConditions.Seconds[$number]
+
+    Write-Host "Monitoring for $($seconds) seconds"
     $progressActivity = "Monitoring for $seconds seconds"
     $progressStatus = "Time remaining"
     # Array to track the percentage increases
@@ -1194,14 +865,13 @@ function Sleep-WithPriceChecks {
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
         [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100)
         
-        # Track the percentage increase
+        # Track the percentage increase for last 2 iterations
         $percentageHistory += $percentageIncrease
         if ($percentageHistory.Count -gt 2) {
-            # Keep only the last two values
             $percentageHistory = $percentageHistory[-2..-1]
         }
 
-        # Add this check before setting the action to buy
+        # Add this check to only buy if price has not jumped +50% in the last 2 iterations
         if ($percentageHistory.Count -eq 2) {
             $lastIncreaseDiff = [math]::Abs($percentageHistory[-1] - $percentageHistory[-2])
             if ($lastIncreaseDiff -gt 50) {
@@ -1210,64 +880,34 @@ function Sleep-WithPriceChecks {
             }
         }
 
+        # Every 10 iterations show total percentage change
         if($i % 10 -eq 0){
             Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
+            Write-Host "percentageIncreaseRequired = $($percentageIncreaseRequired)" -ForegroundColor Magenta
         }
-        if($i -gt 10 -and $i -lt 20){
-            # if the price has gone up 200% buy
-            if($percentageIncrease -gt 200){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current  Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action
+
+        # Work out the required percentage increase as per buy conditions CSV
+        $percentageIncreaseRequired = 250
+        foreach ($buyCondition in $buyConditions){
+            if($i -lt $buyCondition.Seconds){
+                $percentageIncreaseRequired = $buyCondition.BuyCondition
+                break
             }
         }
-        if($i -gt 20 -and $i -lt 90){  # if the price has gone up 125% buy
-            if($percentageIncrease -gt 125){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action
-            }            
+
+        # Buy logic
+        if($percentageIncrease -gt $percentageIncreaseRequired){
+            Write-Host "Price increase" -ForegroundColor Green
+            Write-Host "Current  Price = $($newPrice)"
+            Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
+            Write-Host "Buy token" -ForegroundColor Green
+            $action = "buy"
+            Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
+            # Stop and remove the progress bar
+            Write-Progress -Activity "Processing" -Completed
+            return $action
         }
-        if($i -gt 90 -and $i -lt 240){
-            # if the price has gone up 100% buy            
-            if($percentageIncrease -gt 100){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current  Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action               
-            }
-        }
-        if($i -gt 240 -and $i -lt $seconds){ 
-            # if the price has gone up 100% buy
-            if($percentageIncrease -gt 100){
-                Write-Host "Price increase" -ForegroundColor Green
-                Write-Host "Current  Price = $($newPrice)"
-                Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-                Write-Host "Buy token" -ForegroundColor Green
-                $action = "buy"
-                Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-                # Stop and remove the progress bar
-                Write-Progress -Activity "Processing" -Completed
-                return $action                
-            }
-        }
+        
         Write-Progress -Activity $progressActivity -Status "$progressStatus : $timeRemaining seconds" -PercentComplete $percentComplete
         Start-Sleep -Seconds 1
     }
@@ -1282,19 +922,19 @@ function Monitor-NewTokenPrice(){
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
         [Parameter(Mandatory = $true)] [double] $InitialPrice,
-        [Parameter(Mandatory = $true)] $WaitTime,
         [Parameter(Mandatory = $false)] $StartIncriment = 0
     )
 
     Write-Host "Initial Price = $($initialPrice)" -ForegroundColor Yellow
     Write-Host "Waiting for $($waitTime) seconds"
     
-    $action = Sleep-WithPriceChecks -Seconds $waitTime -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment
+    $action = Sleep-WithPriceChecks -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment
     
     if($action -eq "buy"){
         return $action
     }
 
+    write-host "******** DOES THIS CODE EVER RUN ????????????????????"
     [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
 
     if($newPrice -gt $initialPrice){
@@ -1924,7 +1564,7 @@ function Monitor-Alerts(){
                     $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
                     $count = $chat.update_id.count
                     
-                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count", "-ignoreInit" 
+                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count"
 
                     # Send alert
                     Send-TelegramMessage -ChatId $userTelegramGroup -Message "New token - $($tokenName)"
@@ -1933,19 +1573,15 @@ function Monitor-Alerts(){
 
                     # Get the initial price of the new token                    
                     [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-                    # check a price was returned
-                    if($initialPrice -eq -1){
-                        Write-Host "Token code not right, skipping token. TokenCode = $($tokenCode)" -ForegroundColor Red
-                        break OuterLoop  
-                    }
+                    
                     while($null -eq $initialPrice){
                         [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
                     }
 
-                    # Monitor the token to see if price has increases within $waitTime (in seconds)
-                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -WaitTime $waitTime                    
+                    # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
+                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice                  
                     while($action -eq 'hold'){
-                        $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -WaitTime $waitTime -StartIncriment 240                      
+                        $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment 240                      
                     }
                     if($action -eq 'buy'){
                         Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
@@ -1955,8 +1591,8 @@ function Monitor-Alerts(){
                         #Monitor-NewPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
                         Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn
                         #Monitor-ExistingPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                        SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime
-                        Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
+                        #SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime
+                        #Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
                         $loop = $false
                         break
                     } 
