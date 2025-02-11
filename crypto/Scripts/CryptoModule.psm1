@@ -23,7 +23,7 @@ function Log-Price(){
             [Parameter(Mandatory = $false)][string] $LogFolder = ".\log\Historic Data"
         )
     $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$time,$CurrentPrice" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
+    "$time,$CurrentPrice,$tokenName" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
 }
 
 
@@ -443,17 +443,6 @@ function Create-Script(){
     }
 }
 
-function Log-Price(){
-    Param
-        (
-            [Parameter(Mandatory = $false)][string] $CurrentPrice,
-            [Parameter(Mandatory = $false)][string] $TokenName,
-            [Parameter(Mandatory = $false)][string] $LogFolder = ".\log"
-        )
-    $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$time,$CurrentPrice" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
-}
-
 function Log-Token(){
     Param
         (
@@ -583,11 +572,13 @@ function Recover-BuyIn() {
         [Parameter(Mandatory = $false)][switch] $DoNotRecoverBuyIn
     )
 
+    
     if($doNotRecoverBuyIn){
         Write-Host "Skipping recovering the buyin" -ForegroundColor Yellow
         Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
     }
     else{
+        Log-Price -TokenName $tokenName -CurrentPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
         [double]$newPrice = Get-TokenPrice -TokenCode $TokenCode -TokenIssuer $TokenIssuer
         [double]$stopUpperLimit = $buyPrice * ($sellPercentage/100)
         [double]$stopLowerLimit = $buyPrice * 0.10
@@ -681,6 +672,8 @@ function Monitor-EstablishedPosition {
         [Parameter(Mandatory = $true)][datetime] $BuyTime,
         [Parameter(Mandatory = $false)][string] $StopsFilePath = '.\config\stops.csv'
     )
+
+    Log-Price -TokenName $tokenName -CurrentPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
     
     # Get the current price
     [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
@@ -1530,78 +1523,76 @@ function Monitor-Alerts(){
         
         if($chat.count -gt $count){
             $i = $chat.count - $count 
-            #while($i -gt 0 -and $loop -eq $true){
-                $newTokenAlert = $chat[$chat.count -$i].message.text
-                $i--
-                $alertType = Get-AlertTypeFromAlert -Alert $newTokenAlert -Silent
+            $newTokenAlert = $chat[$chat.count -$i].message.text
+            $i--
+            $alertType = Get-AlertTypeFromAlert -Alert $newTokenAlert -Silent
+            
+            # Set Standard buy
+            if($newTokenAlert -like "*standardbuy*"){
+                Write-Host "Setting standard buy"
+                $standardBuy = $newTokenAlert.split('=')[1]
+                $standardBuy = $standardBuy.replace(' ','')
+                Set-StandardBuy -StandardBuy $standardBuy
+                Send-TelegramMessage -ChatId $userTelegramGroup -Message "Standard buy set to $($standardBuy)"
+                Send-TelegramMessage -ChatId $adminTelegramGroup -Message "done"
+            }
+            
+            # When an alert comes in, do the following
+            if($alertType -eq 'New Token Alert'){
+                Write-Host ""
+                Write-Host "*** NEW TOKEN ***" -ForegroundColor Green
+                                    
+                $tokenIssuer = Get-TokenIssuerFromAlert -Alert $newTokenAlert
+                $tokenName = Get-TokenNameFromAlert -Alert $newTokenAlert
+                Set-TokenName -TokenName $tokenName
+                $tokenCode = Get-TokenCodeFromName -TokenName $tokenName
+                Set-TokenCode -TokenCode $tokenCode 
+                Test-TokenCode -TokenCode $tokenCode -TokenName $tokenName -TokenIssuer $tokenIssuer
+                $tokenCode = Get-TokenCode
+                Log-Token -Action NewToken -TokenName -$tokenName
+
+                # Open a new powershell window
+                Write-host "starting new shell"
+                $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
+                $count = $chat.update_id.count
                 
-                # Set Standard buy
-                if($newTokenAlert -like "*standardbuy*"){
-                    Write-Host "Setting standard buy"
-                    $standardBuy = $newTokenAlert.split('=')[1]
-                    $standardBuy = $standardBuy.replace(' ','')
-                    Set-StandardBuy -StandardBuy $standardBuy
-                    Send-TelegramMessage -ChatId $userTelegramGroup -Message "Standard buy set to $($standardBuy)"
-                    Send-TelegramMessage -ChatId $adminTelegramGroup -Message "done"
-                }
+                Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count"
+
+                # Send alert
+                Send-TelegramMessage -ChatId $userTelegramGroup -Message "New token - $($tokenName)"
+                Write-Host "(this can be deleted its just to confirm we exited the Send-TelegramMessage function)"
+                Write-Host "Token code = $($tokenCode)"
+
+                # Get the initial price of the new token                    
+                [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
                 
-                # When an alert comes in, do the following
-                if($alertType -eq 'New Token Alert'){
-                    Write-Host ""
-                    Write-Host "*** NEW TOKEN ***" -ForegroundColor Green
-                                        
-                    $tokenIssuer = Get-TokenIssuerFromAlert -Alert $newTokenAlert
-                    $tokenName = Get-TokenNameFromAlert -Alert $newTokenAlert
-                    Set-TokenName -TokenName $tokenName
-                    $tokenCode = Get-TokenCodeFromName -TokenName $tokenName
-                    Set-TokenCode -TokenCode $tokenCode 
-                    Test-TokenCode -TokenCode $tokenCode -TokenName $tokenName -TokenIssuer $tokenIssuer
-                    $tokenCode = Get-TokenCode
-                    Log-Token -Action NewToken -TokenName -$tokenName
-
-                    # Open a new powershell window
-                    Write-host "starting new shell"
-                    $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup 
-                    $count = $chat.update_id.count
-                    
-                    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", ".\GoBabyGo.ps1", "-Count", "$count"
-
-                    # Send alert
-                    Send-TelegramMessage -ChatId $userTelegramGroup -Message "New token - $($tokenName)"
-                    Write-Host "(this can be deleted its just to confirm we exited the Send-TelegramMessage function)"
-                    Write-Host "Token code = $($tokenCode)"
-
-                    # Get the initial price of the new token                    
+                while($null -eq $initialPrice){
                     [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-                    
-                    while($null -eq $initialPrice){
-                        [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-                    }
-
-                    # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice                  
-                    while($action -eq 'hold'){
-                        $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment 240                      
-                    }
-                    if($action -eq 'buy'){
-                        Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
-                        Buy-Token -XrpAmount $standardBuy -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-                        $buyTime = Get-Date
-                        $buyPrice = Get-BuyPrice
-                        #Monitor-NewPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                        Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn
-                        #Monitor-ExistingPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                        #SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime
-                        #Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
-                        $loop = $false
-                        break
-                    } 
-                    if($action -eq 'abandone'){
-                        Write-Host "Token lost money, abandoning token" -ForegroundColor Red
-                        ExitShell
-                    }
                 }
-            #}
+
+                # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
+                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice                  
+                while($action -eq 'hold'){
+                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment 240                      
+                }
+                if($action -eq 'buy'){
+                    Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
+                    Buy-Token -XrpAmount $standardBuy -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+                    $buyTime = Get-Date
+                    $buyPrice = Get-BuyPrice
+                    #Monitor-NewPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
+                    Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn
+                    #Monitor-ExistingPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
+                    #SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime
+                    #Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
+                    $loop = $false
+                    break
+                } 
+                if($action -eq 'abandone'){
+                    Write-Host "Token lost money, abandoning token" -ForegroundColor Red
+                    ExitShell
+                }
+            }
         }
     }
 }
