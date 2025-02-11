@@ -1554,7 +1554,7 @@ function Monitor-Alerts(){
     $loop = $true
     while($loop -eq $true){
         Write-Host "." -NoNewline
-        Start-Sleep -Seconds 3
+        Start-Sleep -Seconds 2 
         $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent 
         
         if($chat.count -gt $count){
