@@ -673,7 +673,7 @@ function Monitor-EstablishedPosition {
         [Parameter(Mandatory = $false)][string] $StopsFilePath = '.\config\stops.csv'
     )
 
-    Log-Price -TokenName $tokenName -CurrentPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+    Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
     
     # Get the current price
     [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
@@ -851,7 +851,7 @@ function Sleep-WithPriceChecks {
     $percentageHistory = @()
 
     for ($i = $startIncriment; $i -lt $seconds; $i++) {   
-        Log-Price -TokenName $tokenName -CurrentPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
 
         $percentComplete = [int](($i / $seconds) * 100)
         $timeRemaining = $seconds - $i
