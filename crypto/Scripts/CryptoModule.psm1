@@ -984,11 +984,13 @@ function Set-TokenCode(){
 }
 
 function Get-TokenCode(){
-    Write-Host "Token Code = $($tokenCode)"
     return $global:tokenCode
 }
 
 
+function Get-TokenIssuer(){
+    return $global:tokenIssuer
+}
 
 function Set-TokenIssuer(){
     Param
