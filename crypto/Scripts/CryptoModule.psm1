@@ -16,14 +16,14 @@ function init(){
 }
 
 function Log-Price(){
-    Param
-        (
-            [Parameter(Mandatory = $false)][string] $CurrentPrice,
-            [Parameter(Mandatory = $false)][string] $TokenName,
-            [Parameter(Mandatory = $false)][string] $LogFolder = ".\log\Historic Data"
-        )
+    param (
+        [Parameter(Mandatory = $false)][string] $TokenPrice,
+        [Parameter(Mandatory = $false)][string] $TokenName,
+        [Parameter(Mandatory = $false)][string] $LogFolder = ".\log"
+    )
+    $tokenSupply = Get-TokenSupply
     $time = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$time,$CurrentPrice,$tokenName" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
+    "$time,$price,$tokenName,$tokenSupply" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
 }
 
 
@@ -578,7 +578,7 @@ function Recover-BuyIn() {
         Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
     }
     else{
-        Log-Price -TokenName $tokenName -CurrentPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
         [double]$newPrice = Get-TokenPrice -TokenCode $TokenCode -TokenIssuer $TokenIssuer
         [double]$stopUpperLimit = $buyPrice * ($sellPercentage/100)
         [double]$stopLowerLimit = $buyPrice * 0.10
@@ -990,6 +990,45 @@ function Get-TokenCode(){
     return $global:tokenCode
 }
 
+
+
+function Set-TokenIssuer(){
+    Param
+    (
+        [Parameter(Mandatory = $true)] $TokenIssuer
+    )
+
+    $global:tokenIssuer = $tokenIssuer
+}
+
+
+function Get-TokenSupplyFromAlert(){
+    Param
+    (
+        [Parameter(Mandatory = $true)] $Alert
+    )
+
+    $tokenSupply = ($alert -split "`n")[3]
+    $tokenSupply = $tokenSupply.split('Supply: ')[8]
+    $tokenSupply = $tokenSupply.replace(',','')
+    [float] $tokenSupply
+    $global:tokenSupply = $tokenSupply
+}
+
+function Set-TokenSupply(){
+    Param
+    (
+        [Parameter(Mandatory = $true)] $TokenSupply
+    )
+
+    $global:tokenSupply = $tokenSupply
+}
+
+function Get-TokenSupply(){
+
+    return $global:tokenSupply
+}
+
 function Set-TokenName(){
     Param
     (
@@ -1001,7 +1040,6 @@ function Set-TokenName(){
 
 function Get-TokenName(){
 
-    Write-Host "Token name = $($tokenName)"
     return $global:tokenName
 }
 
@@ -1543,12 +1581,15 @@ function Monitor-Alerts(){
                 Write-Host "*** NEW TOKEN ***" -ForegroundColor Green
                                     
                 $tokenIssuer = Get-TokenIssuerFromAlert -Alert $newTokenAlert
+                Set-TokenIssuer -TokenIssuer $tokenIssuer
                 $tokenName = Get-TokenNameFromAlert -Alert $newTokenAlert
                 Set-TokenName -TokenName $tokenName
                 $tokenCode = Get-TokenCodeFromName -TokenName $tokenName
                 Set-TokenCode -TokenCode $tokenCode 
                 Test-TokenCode -TokenCode $tokenCode -TokenName $tokenName -TokenIssuer $tokenIssuer
                 $tokenCode = Get-TokenCode
+                $tokenSupply = Get-TokenSupplyFromAlert -Alert -$newTokenAlert
+                Set-TokenSupply -TokenSupply $tokenSupply
                 Log-Token -Action NewToken -TokenName -$tokenName
 
                 # Open a new powershell window
