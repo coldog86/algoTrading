@@ -17,7 +17,7 @@ function init(){
 
 function Log-Price(){
     param (
-        [Parameter(Mandatory = $false)][string] $TokenPrice,
+        [Parameter(Mandatory = $false)][double] $TokenPrice,
         [Parameter(Mandatory = $false)][string] $TokenName,
         [Parameter(Mandatory = $false)][string] $LogFolder = ".\log"
     )
