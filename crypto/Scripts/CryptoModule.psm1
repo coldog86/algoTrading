@@ -593,7 +593,8 @@ function Recover-BuyIn() {
             $i++
             Start-Sleep -Seconds 5
             [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-           
+            Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+    
             # Every 10 iterations show total percentage change
             if($i % 10 -eq 0){
                 [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
@@ -641,7 +642,8 @@ function SellConservativly() {
         $i++
         Start-Sleep -Seconds 5
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer        
-        
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+    
         # Every 10 iterations show total percentage change
         if($i % 10 -eq 0){
             [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
