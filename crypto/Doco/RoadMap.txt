@@ -1,5 +1,4 @@
 	[SHORT TERM]
-* Release to Kris
 * Fix slipage 
 * Config writeback
 * Release to others

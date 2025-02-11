@@ -578,8 +578,8 @@ function Recover-BuyIn() {
         Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
     }
     else{
-        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
         [double]$newPrice = Get-TokenPrice -TokenCode $TokenCode -TokenIssuer $TokenIssuer
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
         [double]$stopUpperLimit = $buyPrice * ($sellPercentage/100)
         [double]$stopLowerLimit = $buyPrice * 0.10
         Write-Host "Stop upper limit = $($stopUpperLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
@@ -673,11 +673,10 @@ function Monitor-EstablishedPosition {
         [Parameter(Mandatory = $false)][string] $StopsFilePath = '.\config\stops.csv'
     )
 
-    Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
-    
     # Get the current price
     [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-
+    Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+    
     $stopLevels = Import-Csv -Path $stopsFilePath
     $stopLevels
     
@@ -851,13 +850,12 @@ function Sleep-WithPriceChecks {
     $percentageHistory = @()
 
     for ($i = $startIncriment; $i -lt $seconds; $i++) {   
-        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
-
         $percentComplete = [int](($i / $seconds) * 100)
         $timeRemaining = $seconds - $i
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
         [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100)
-        
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+
         # Track the percentage increase for last 2 iterations
         $percentageHistory += $percentageIncrease
         if ($percentageHistory.Count -gt 2) {
