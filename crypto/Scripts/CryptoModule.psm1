@@ -879,6 +879,11 @@ function Sleep-WithPriceChecks {
         if($i % 10 -eq 0){
             Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
             Write-Host "percentageIncreaseRequired = $($percentageIncreaseRequired)" -ForegroundColor Magenta
+
+            # Validate that the price hasn't dropped to < 15%
+            if($percentageIncrease -lt -85){
+                Write-Host "Price has flatlined" -ForegroundColor Red
+            }
         }
 
         # Work out the required percentage increase as per buy conditions CSV
