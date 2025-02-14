@@ -1,0 +1,22 @@
+combined.csv is a bunch of crypto tokens. 
+Each token name represents a descret token. They can not be traded with each other.
+
+[Strategy]
+Moving Average strategy using these parameters:
+Short window: 20-period 
+Long window: 100-period 
+
+[Rules]
+Use a fixed outlay of $10 per buy, starting with an opening balance of $100
+Include a rule that Prevent additional buy signals if the strategy already holds the token.
+Factor in a slipage of 5% per trade. 
+
+[Action]
+Back test the strategy and show me the results, include number of trades, include ROI and total ROI as a percentage
+Show results to 3 decimal places
+Give me the sum of the individual token's ROIs percentages to calculate the overall ROI
+
+[Notes]
+Moving Average ROI
+Combined.csv = 
+Combined2.csv = 

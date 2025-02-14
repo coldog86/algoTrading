@@ -1,0 +1,5 @@
+do a grid search to find the best parameters using these parameters to test
+Rolling Window: [4,6,8]
+Std Multiplier: [80,100,120]
+
+
