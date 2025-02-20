@@ -578,11 +578,11 @@ function Recover-BuyIn() {
     
     if($doNotRecoverBuyIn){
         Write-Host "Skipping recovering the buyin" -ForegroundColor Yellow
-        Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $silent -CollectDataOnly $collectDataOnly
+        Run-StopLossStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $silent -CollectDataOnly $collectDataOnly
     }
     else{
         [double]$newPrice = Get-TokenPrice -TokenCode $TokenCode -TokenIssuer $TokenIssuer
-        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token 
         [double]$stopUpperLimit = $buyPrice * ($sellPercentage/100)
         [double]$stopLowerLimit = $buyPrice * 0.10
         Write-Host "Stop upper limit = $($stopUpperLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
@@ -595,7 +595,7 @@ function Recover-BuyIn() {
             $i++
             Start-Sleep -Seconds 5
             [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-            Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+            Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token 
     
             # Every 10 iterations show total percentage change
             if($i % 10 -eq 0){
@@ -617,12 +617,12 @@ function Recover-BuyIn() {
             Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) above $($sellPercentage)%" -Silent $silent
             Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellPrice $stopUpperLimit -AmountOfTokenToSell $amountOfTokenToSell -Slipage 0.02 -Message "- Token above $($sellPercentage)%" -ContinueOnPriceFall
             Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "Recovery completed for $($tokenName)" -Silent $silent
-            Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $silent -CollectDataOnly $collectDataOnly
+            Run-StopLossStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $silent -CollectDataOnly $collectDataOnly
         }
     }
 }
 
-function SellConservativly() {
+function Run-SellConservativlyStrategy() {
     Param (
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
@@ -645,7 +645,7 @@ function SellConservativly() {
         $i++
         Start-Sleep -Seconds 5
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer        
-        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token 
     
         # Every 10 iterations show total percentage change
         if($i % 10 -eq 0){
@@ -669,83 +669,6 @@ function SellConservativly() {
     }
 }
 
-function Monitor-EstablishedPosition {
-    Param (
-        [Parameter(Mandatory = $true)][string] $TokenCode,
-        [Parameter(Mandatory = $true)][string] $TokenIssuer,
-        [Parameter(Mandatory = $false)] $StopNumber = 1,
-        [Parameter(Mandatory = $true)][double] $BuyPrice,
-        [Parameter(Mandatory = $true)][datetime] $BuyTime,
-        [Parameter(Mandatory = $false)][string] $StopsFilePath = '.\config\stops.csv',
-        [Parameter(Mandatory = $false)][bool] $Silent = $false, 
-        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
-    )
-
-    # Get the current price
-    [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-    Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
-    
-    $stopLevels = Import-Csv -Path $stopsFilePath
-    $stopLevels
-    
-    # if you clear all the stops, sell all
-    if ($stopNumber -gt (($stopLevels.count)-1)) {
-        Write-Host "All stops completed, selling remaining tokens."
-        Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "All stops completed for $($tokenName), selling all." -Silent $silent
-        if(!$collectDataOnly){
-            Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -AmountOfTokenToSell 100 -Slipage 0.1 -Message "- No further stops programmed"
-        }
-        else{
-            Write-Host "Sell-Token - All stops completed (if not data collection only)" -ForegroundColor Red -BackgroundColor Black
-        }
-    }
-    else{
-        [double]$stopLowerLimit = $buyPrice * ($stopLevels.stopLowerLimit[$stopNumber-1] /100)
-        [double]$stopUpperLimit = $buyPrice * ($stopLevels.stopUpperLimit[$stopNumber-1] /100)
-
-        Write-Host "Stop $($stopNumber) upper limit = $($stopUpperLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
-        Write-Host "Stop $($stopNumber) lower limit = $($stopLowerLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
-        
-        #Loop while you're in the stop
-        while ($newPrice -gt $stopLowerLimit -and $newPrice -lt $stopUpperLimit) {
-            $i++
-            Start-Sleep -Seconds 5
-            Write-Host "*** At stop $($stopNumber) ***"
-            [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer 
-            Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
-    
-            # Every 10 iterations show total percentage change
-            if($i % 10 -eq 0){
-                [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $buyPrice) / $buyPrice) * 100)
-                Write-Host "$($tokenName) has changed $($percentageIncrease)%" -ForegroundColor Magenta
-                Start-Sleep -Seconds 1 # Small delay to avoid multiple writes in the same second
-                Write-Host "Stop $($stopNumber) upper limit = $($stopUpperLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
-                Write-Host "Stop $($stopNumber) lower limit = $($stopLowerLimit)" -ForegroundColor DarkYellow -BackgroundColor Black
-            }       
-        }       
-        
-        # you've moved through the stop
-        if($newPrice -gt $stopUpperLimit){
-            Write-Host "Reached upperlimit for $stopNumber (target: $stopUpperLimit)" -ForegroundColor Green
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) Reached stop upperlimit for $($stopNumber)" -Silent $silent    
-            $stopNumber++
-            Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber $stopNumber -Silent $silent -CollectDataOnly $collectDataOnly 
-        }
-
-        # Sell if it drops below the stop     
-        if($newPrice -lt $stopLowerLimit){        
-            Write-Host "$($tokenName) fell below stop $($stopNumber) lower stop" -ForegroundColor Red
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) fell below stop $($stopNumber) lower stop" -Silent $silent     
-            if(!$collectDataOnly){
-                Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -AmountOfTokenToSell 100 -Slipage 0.5 -Message "- $($tokenName) fell below stop $($stopNumber) lower stop"
-                exit
-            }
-            else{
-                Write-Host "Sell-Token (if not data collection only)" -ForegroundColor Red -BackgroundColor Black
-            }
-        }    
-    }
-}
 
 function Get-TrustLines(){
     Param
@@ -875,7 +798,7 @@ function Test-StopLossBuyConditions {
         $timeRemaining = $seconds - $i
         [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
         [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100)
-        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token with the intention of using AI to create a stratergy
+        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token 
 
         # Track the percentage increase for last 2 iterations
         $percentageHistory += $percentageIncrease
@@ -925,6 +848,32 @@ function Test-StopLossBuyConditions {
             return $action
         }
         
+        [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+
+        if($newPrice -gt $initialPrice){
+            Write-Host "Price increase" -ForegroundColor Green
+            Write-Host "Initial Price = $($initialPrice)"
+            Write-Host "Current  Price = $($newPrice)"
+            [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100) # only show to 2 decimal places
+            
+            Write-Host "Token gained, but not enough: hold" -ForegroundColor Red
+            $action = "hold"
+            return $action
+        
+        } else {
+            if($percentageIncrease -gt -35){
+                Write-Host "Price decreased $($percentageIncrease)" -ForegroundColor Red
+                Log-Token -Action Distroy -TokenName -$tokenName
+                $action = "abandone"
+                return $action
+            } 
+            else{            
+                Write-Host "Token lost, but not much: hold" -ForegroundColor Red
+                $action = "hold"
+                return $action
+            }
+        }
+
         Write-Progress -Activity $progressActivity -Status "$progressStatus : $timeRemaining seconds" -PercentComplete $percentComplete
         Start-Sleep -Seconds 1
     }
@@ -947,46 +896,17 @@ function Monitor-NewTokenPrice(){
     Write-Host "Initial Price = $($initialPrice)" -ForegroundColor Yellow
     Write-Host "Waiting for $($waitTime) seconds"
     
+    $tokenName = Get-TokenName
+
     if($strategy -eq 'StopLoss'){
         $action = Test-StopLossBuyConditions -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
     }
-
-    if($action -eq "buy"){
-        return $action
+    
+    if($strategy -eq 'BolleringBands'){
+        $action = Run-BolleringBandStrategy -TokenName $tokenName
     }
 
-    [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-
-    if($newPrice -gt $initialPrice){
-        Write-Host "Price increase" -ForegroundColor Green
-        Write-Host "Initial Price = $($initialPrice)"
-        Write-Host "Current  Price = $($newPrice)"
-        [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100) # only show to 2 decimal places
-        
-        Write-Host "The percentage increase is $($percentageIncrease) %" -ForegroundColor Cyan
-        if($percentageIncrease -gt 75){
-            Write-Host "Increase above 75% - Buy token" -ForegroundColor Green
-            Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-            $action = "buy"
-            return $action
-        } else {
-            Write-Host "Token gained, but not enough: hold" -ForegroundColor Red
-            $action = "hold"
-            return $action
-        }
-    } else {
-        if($percentageIncrease -gt -35){
-            Write-Host "Price decreased $($percentageIncrease)" -ForegroundColor Red
-            Log-Token -Action Distroy -TokenName -$tokenName
-            $action = "abandone"
-            return $action
-        } 
-        else{            
-            Write-Host "Token lost, but not much: hold" -ForegroundColor Red
-            $action = "hold"
-            return $action
-        }
-    }
+    return $action
 }
 function Set-BuyPrice(){
     Param
@@ -1577,10 +1497,11 @@ function Get-TelegramChat(){
 
 function Monitor-Token(){
     Param(
-        [Parameter(Mandatory = $false)] $TokenCombination = "",
-        [Parameter(Mandatory = $false)] $TokenCode = "",
-        [Parameter(Mandatory = $false)] $TokenIssuer = "", 
-        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
+        [Parameter(Mandatory = $false)][string] $TokenCombination = "",
+        [Parameter(Mandatory = $false)][string] $TokenCode = "",
+        [Parameter(Mandatory = $false)][string] $TokenIssuer = "", 
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly,
+        [Parameter(Mandatory = $true)][bool] $Strategy
     )
 
     if($tokenCombination -ne ""){
@@ -1606,7 +1527,7 @@ function Monitor-Token(){
     }
 
     # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy StopLoss -InitialPrice $initialPrice -CollectDataOnly $collectDataOnly 
+    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -InitialPrice $initialPrice -CollectDataOnly $collectDataOnly 
 }
 
 function Monitor-Alerts(){
@@ -1614,7 +1535,8 @@ function Monitor-Alerts(){
         [Parameter(Mandatory = $true)] $TelegramToken,
         [Parameter(Mandatory = $false)][bool] $Silent,          
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly,
-        [Parameter(Mandatory = $false)] $WaitTime = 600 # In seconds
+        [Parameter(Mandatory = $false)][int] $WaitTime = 600, # In seconds
+        [Parameter(Mandatory = $true)][string] $Strategy
     )
     $standardBuy = Get-StandardBuy
     $userTelegramGroup = Get-UserTelegramGroup
@@ -1681,9 +1603,9 @@ function Monitor-Alerts(){
                 }
 
                 # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy StopLoss -InitialPrice $initialPrice -CollectDataOnly collectDataOnly              
+                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -InitialPrice $initialPrice -CollectDataOnly collectDataOnly              
                 while($action -eq 'hold'){
-                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy StopLoss -InitialPrice $initialPrice -StartIncriment 240 -CollectDataOnly collectDataOnly
+                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -InitialPrice $initialPrice -StartIncriment 240 -CollectDataOnly collectDataOnly
                 }
                 if($action -eq 'buy'){
                     Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
@@ -1692,9 +1614,8 @@ function Monitor-Alerts(){
                     $buyPrice = Get-BuyPrice
                     #Monitor-NewPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
                     Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn -Silent $true -CollectDataOnly collectDataOnly
-                    #Monitor-ExistingPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                    #SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime -Silent $true
-                    #Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1  -Silent $true
+                    #Run-SellConservativlyStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime -Silent $true
+                    #Run-StopLossStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $true
                     $loop = $false
                     break
                 } 

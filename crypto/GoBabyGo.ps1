@@ -1,4 +1,5 @@
 param(
+    [Parameter(Mandatory = $false)][string] [ValidateSet('StopLoss', 'BolleringBands')] $Strategy = 'BolleringBands',    
     [Parameter(Mandatory = $false)][string] $Branch = 'Beta',
     [Parameter(Mandatory = $false)][switch] $UseDefaultConfig,
     [Parameter(Mandatory = $false)][bool] $CollectDataOnly = $false,
@@ -32,7 +33,8 @@ if($ignoreInit){
 }
 if(!$pullRepoOnly){
     $telegramToken = Get-TelegramToken -Silent $silent
-    Monitor-Alerts -TelegramToken $telegramToken -Silent $silent -CollectDataOnly $collectDataOnly
+    Write-Host "Running $($strategy) strategy" -ForegroundColor Magenta -BackgroundColor Black
+    Monitor-Alerts -Strategy $strategy -TelegramToken $telegramToken -Silent $silent -CollectDataOnly $collectDataOnly
 }
 
 
