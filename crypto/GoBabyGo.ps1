@@ -6,7 +6,7 @@ param(
     [Parameter(Mandatory = $false)][switch] $PullRepoOnly,
     [Parameter(Mandatory = $false)][switch] $NoWriteBack,
     [Parameter(Mandatory = $false)][switch] $NoClip,
-    [Parameter(Mandatory = $false)][string[]] $FileNames = "'CryptoModule.psm1', 'StrategyModule.psm1'",
+    [Parameter(Mandatory = $false)][string[]] $FileNames = @('CryptoModule.psm1', 'StrategyModule.psm1'),
     [Parameter(Mandatory = $false)][switch] $IgnoreInit
 )
 
