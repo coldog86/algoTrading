@@ -21,8 +21,7 @@ $uri = [System.Text.Encoding]::UTF8.GetString($bytes)
 foreach($fileName in $fileNames){
     $newUri = $uri.replace('<fileName>', $fileName)
     $newUri = $newUri.replace('<branch>', $branch)
-    $newUri
-    Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
+    Invoke-WebRequest -Uri $newUri -OutFile "scripts\$fileName"
     Import-Module .\scripts\$fileName -Force -WarningAction Ignore
     Remove-Item -Path .\scripts\$fileName
 }
