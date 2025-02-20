@@ -1549,7 +1549,7 @@ function Get-TelegramChat(){
         Write-Host "UpdateID = $($updateId)" -ForegroundColor Magenta
     }
     Set-Configuration -ConfigName 'offset' -ConfigValue $updateId -Silent $silent
-
+    Write-Host "looking for delay"
     if(!$silent){
         $alert = $response[$response.count -1].message.text
         if($alert -eq 'test'){
