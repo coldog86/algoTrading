@@ -9,6 +9,9 @@
 [Parameter(Mandatory = $false)][switch] $IgnoreInit
 
 Write-Host "Accessing branch: $($branch)"
+if($pullRepoOnly){
+    Write-Host "Updating local files only"
+}
 $bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NvbGRvZzg2L2FsZ29UcmFkaW5nL3JlZnMvaGVhZHMvPGJyYW5jaD4vY3J5cHRvL1NjcmlwdHMvPGZpbGVOYW1lPg==")
 $uri = [System.Text.Encoding]::UTF8.GetString($bytes)
 $uri = $uri.replace('<fileName>', $fileName)
