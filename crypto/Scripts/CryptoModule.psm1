@@ -35,7 +35,7 @@ function Create-DefaultConfigs(){
     )
 
     foreach ($fileName in $fileNames){
-        Write-Host "Creating default configs ($($fileName))"
+        Write-Host "Creating default configs ($($fileName))" -ForegroundColor Cyan
         $configFilePath = ".\config\$($fileName)"
         $defaultFilePath = ".\config\default\$($fileName)"
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/config/$($fileName)" -OutFile $defaultFilePath   
@@ -57,7 +57,7 @@ function Create-Doco(){
         [Parameter(Mandatory = $true)][string[]] $FileNames
     )
     foreach ($fileName in $fileNames){
-        Write-Host "Creating $($fileName) file"
+        Write-Host "Creating $($fileName) file" -ForegroundColor Cyan
         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/$($branch)/crypto/Doco/$($fileName)" -OutFile "Doco\$($fileName)"   
     }
 }
