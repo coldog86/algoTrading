@@ -887,7 +887,7 @@ function Monitor-NewTokenPrice(){
     (
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
-        [Parameter(Mandatory = $true)][string] $Strategy,
+        [Parameter(Mandatory = $true)][string][ValidateSet('StopLoss', 'BolleringBands')] $Strategy,
         [Parameter(Mandatory = $true)] [double] $InitialPrice,
         [Parameter(Mandatory = $false)] $StartIncriment = 0,
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly
@@ -899,10 +899,12 @@ function Monitor-NewTokenPrice(){
     $tokenName = Get-TokenName
 
     if($strategy -eq 'StopLoss'){
+        Write-Host "Running stratergy; $($strategy)"
         $action = Test-StopLossBuyConditions -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
     }
     
     if($strategy -eq 'BolleringBands'){
+        Write-Host "Running stratergy; $($strategy)"
         $action = Run-BolleringBandStrategy -TokenName $tokenName
     }
 
