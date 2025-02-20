@@ -1583,10 +1583,10 @@ function Monitor-Token(){
     }
     
     Set-TokenIssuer -TokenIssuer $tokenIssuer
+    Set-TokenCode -TokenCode $tokenCode 
+    Get-TokenNameFromCode -TokenCode $tokenCode
     Set-TokenName -TokenName $tokenName
     
-    $tokenCode = Get-TokenCodeFromName -TokenName $tokenName
-    Set-TokenCode -TokenCode $tokenCode 
     Test-TokenCode -TokenCode $tokenCode -TokenName $tokenName -TokenIssuer $tokenIssuer
     $tokenCode = Get-TokenCode
     
