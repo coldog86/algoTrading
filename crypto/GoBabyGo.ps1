@@ -15,7 +15,7 @@ Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 Remove-Item -Path .\scripts\$fileName
 
-$telegramToken = Get-TelegramToken -Silent
+$telegramToken = Get-TelegramToken -Silent $true
 
 if($ignoreInit){
     Write-Host "Skipping init"
@@ -23,7 +23,7 @@ if($ignoreInit){
     Init -Branch $branch
 }
 
-Monitor-Alerts -TelegramToken $telegramToken -Silent -CollectDataOnly $collectDataOnly
+Monitor-Alerts -TelegramToken $telegramToken -Silent $true -CollectDataOnly $collectDataOnly
 
 
 
