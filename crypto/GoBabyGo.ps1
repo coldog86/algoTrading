@@ -6,7 +6,7 @@ param(
     [Parameter(Mandatory = $false)][switch] $PullRepoOnly,
     [Parameter(Mandatory = $false)][switch] $NoWriteBack,
     [Parameter(Mandatory = $false)][switch] $NoClip,
-    [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1',
+    [Parameter(Mandatory = $false)][string[]] $FileNames = "'CryptoModule.psm1', 'StrategyModule.psm1'",
     [Parameter(Mandatory = $false)][switch] $IgnoreInit
 )
 
@@ -18,9 +18,13 @@ $bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY2
 $uri = [System.Text.Encoding]::UTF8.GetString($bytes)
 $uri = $uri.replace('<fileName>', $fileName)
 $uri = $uri.replace('<branch>', $branch)
-Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
-Import-Module .\scripts\$fileName -Force -WarningAction Ignore
-Remove-Item -Path .\scripts\$fileName
+
+# Import modules
+foreach($fileName in $fileNames){
+    Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
+    Import-Module .\scripts\$fileName -Force -WarningAction Ignore
+    Remove-Item -Path .\scripts\$fileName
+}
 
 $telegramToken = Get-TelegramToken -Silent $silent
 

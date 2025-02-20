@@ -950,12 +950,11 @@ function Monitor-NewTokenPrice(){
     if($strategy -eq 'StopLoss'){
         $action = Test-StopLossBuyConditions -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
     }
-    
+
     if($action -eq "buy"){
         return $action
     }
 
-    write-host "******** DOES THIS CODE EVER RUN ????????????????????"
     [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
 
     if($newPrice -gt $initialPrice){
