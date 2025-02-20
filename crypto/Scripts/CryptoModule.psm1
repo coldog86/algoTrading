@@ -1557,9 +1557,13 @@ function Get-TelegramChat(){
             Send-TelegramMessage -ChatId $telegramGroup -Message "Test received"
         } 
         else {
+            Write-Host "looking for delay2"
             $messageId = $response[$response.count -1].message.message_id
+            Write-Host "looking for delay3"
             $tokenName = Get-TokenNameFromAlert -Alert $alert
+            Write-Host "looking for delay4"
             $title = Get-AlertTypeFromAlert -Alert $alert
+            Write-Host "looking for delay5"
             Write-Host "There are $($response.result.count) alerts, the last message ID = $($messageId)"
             Write-Host "The last alert is a $($title) for $($tokenName)"
         }
