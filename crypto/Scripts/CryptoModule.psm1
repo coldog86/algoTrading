@@ -848,7 +848,7 @@ function Sleep-WithProgress {
 }
 
 
-function Sleep-WithPriceChecks {
+function Test-StopLossBuyConditions {
     param (        
         [Parameter(Mandatory = $true)][double] $InitialPrice,           
         [Parameter(Mandatory = $true)] $TokenCode,        
@@ -938,6 +938,7 @@ function Monitor-NewTokenPrice(){
     (
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
+        [Parameter(Mandatory = $true)][string] $Strategy,
         [Parameter(Mandatory = $true)] [double] $InitialPrice,
         [Parameter(Mandatory = $false)] $StartIncriment = 0,
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly
@@ -946,7 +947,9 @@ function Monitor-NewTokenPrice(){
     Write-Host "Initial Price = $($initialPrice)" -ForegroundColor Yellow
     Write-Host "Waiting for $($waitTime) seconds"
     
-    $action = Sleep-WithPriceChecks -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
+    if($strategy -eq 'StopLoss'){
+        $action = Test-StopLossBuyConditions -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
+    }
     
     if($action -eq "buy"){
         return $action
@@ -1604,7 +1607,7 @@ function Monitor-Token(){
     }
 
     # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -CollectDataOnly $collectDataOnly 
+    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy StopLoss -InitialPrice $initialPrice -CollectDataOnly $collectDataOnly 
 }
 
 function Monitor-Alerts(){
@@ -1679,9 +1682,9 @@ function Monitor-Alerts(){
                 }
 
                 # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -CollectDataOnly collectDataOnly              
+                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy StopLoss -InitialPrice $initialPrice -CollectDataOnly collectDataOnly              
                 while($action -eq 'hold'){
-                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment 240 -CollectDataOnly collectDataOnly
+                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy StopLoss -InitialPrice $initialPrice -StartIncriment 240 -CollectDataOnly collectDataOnly
                 }
                 if($action -eq 'buy'){
                     Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
