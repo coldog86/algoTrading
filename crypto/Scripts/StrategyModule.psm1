@@ -11,7 +11,8 @@ function Run-BolleringBandStrategy {
     $i = 6 # starting at 5 so we initially kick off the whole loop
     Write-Host "Starting live trading with Bollering Band strategy..." -ForegroundColor Green
     while ($true) {
-        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token 
+        $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+        Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token 
 
         # Every minute do this...
         if($i % 6 -eq 0){
@@ -42,7 +43,6 @@ function Run-BolleringBandStrategy {
             
             Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green
             
-            $tokenName = $filteredData[0].TokenName
             $tokenName = $tokenName -replace '[^a-zA-Z0-9_-]', ''  # Remove invalid filename characters
             $firstTimestamp = $earliestRecord.ToString("yyyyMMdd_HHmmss")
             $lastTimestamp = $latestRecord.ToString("yyyyMMdd_HHmmss")
