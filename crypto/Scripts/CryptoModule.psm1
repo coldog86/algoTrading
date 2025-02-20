@@ -1594,8 +1594,6 @@ function Monitor-Token(){
     Test-TokenCode -TokenCode $tokenCode -TokenName $tokenName -TokenIssuer $tokenIssuer
     $tokenCode = Get-TokenCode
     
-    $tokenSupply = Get-TokenSupplyFromAlert -Alert -$newTokenAlert
-    Set-TokenSupply -TokenSupply $tokenSupply
     Log-Token -Action NewToken -TokenName -$tokenName
 
     # Get the initial price of the new token                    

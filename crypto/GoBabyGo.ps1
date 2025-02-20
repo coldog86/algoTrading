@@ -10,7 +10,7 @@ param(
     [Parameter(Mandatory = $false)][switch] $IgnoreInit
 )
 
-Write-Host "Accessing branch: "; Write-Host "$($branch)" -ForegroundColor Green -BackgroundColor Black
+Write-Host "Accessing branch: " -NoNewline; Write-Host "$($branch)" -ForegroundColor Green -BackgroundColor Black
 if($pullRepoOnly){
     Write-Host "Updating local files only" -ForegroundColor Yellow
 }
