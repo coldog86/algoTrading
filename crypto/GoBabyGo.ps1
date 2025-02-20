@@ -1,6 +1,7 @@
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
 [Parameter(Mandatory = $false)][switch] $UseDefaultConfig
 [Parameter(Mandatory = $false)][bool] $CollectDataOnly
+[Parameter(Mandatory = $false)][bool] $Silent = $true
 [Parameter(Mandatory = $false)][switch] $NoWriteBack
 [Parameter(Mandatory = $false)][switch] $NoClip
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
@@ -15,7 +16,7 @@ Invoke-WebRequest -Uri $uri -OutFile "scripts\$fileName"
 Import-Module .\scripts\$fileName -Force -WarningAction Ignore
 Remove-Item -Path .\scripts\$fileName
 
-$telegramToken = Get-TelegramToken -Silent $true
+$telegramToken = Get-TelegramToken -Silent $silent
 
 if($ignoreInit){
     Write-Host "Skipping init"
@@ -23,7 +24,7 @@ if($ignoreInit){
     Init -Branch $branch
 }
 
-Monitor-Alerts -TelegramToken $telegramToken -Silent $true -CollectDataOnly $collectDataOnly
+Monitor-Alerts -TelegramToken $telegramToken -Silent $silent -CollectDataOnly $collectDataOnly
 
 
 
