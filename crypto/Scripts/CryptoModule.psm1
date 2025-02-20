@@ -1498,7 +1498,7 @@ function Monitor-Token(){
         [Parameter(Mandatory = $false)][string] $TokenCode = "",
         [Parameter(Mandatory = $false)][string] $TokenIssuer = "", 
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly,
-        [Parameter(Mandatory = $true)][bool] $Strategy
+        [Parameter(Mandatory = $true)][string][ValidateSet('StopLoss', 'BolleringBands')] $Strategy
     )
 
     if($tokenCombination -ne ""){
