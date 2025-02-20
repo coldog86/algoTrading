@@ -1,5 +1,6 @@
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
 [Parameter(Mandatory = $false)][switch] $UseDefaultConfig
+[Parameter(Mandatory = $false)][bool] $CollectDataOnly
 [Parameter(Mandatory = $false)][switch] $NoWriteBack
 [Parameter(Mandatory = $false)][switch] $NoClip
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
@@ -22,7 +23,7 @@ if($ignoreInit){
     Init -Branch $branch
 }
 
-Monitor-Alerts -TelegramToken $telegramToken -Silent 
+Monitor-Alerts -TelegramToken $telegramToken -Silent -CollectDataOnly $collectDataOnly
 
 
 

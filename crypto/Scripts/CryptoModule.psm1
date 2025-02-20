@@ -21,10 +21,10 @@ function Log-Price(){
         [Parameter(Mandatory = $false)][string] $TokenName,
         [Parameter(Mandatory = $false)][string] $LogFolder = ".\log"
     )
-    $tokenSupply = Get-TokenSupply
+    #$tokenSupply = Get-TokenSupply
     $time = Get-Date -Format "HH:mm:ss"    
     $date = Get-Date -Format "yyyy-MM-dd"
-    "$date,$time,$tokenPrice,$tokenName,$tokenSupply" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
+    "$date,$time,$tokenPrice,$tokenName" | Out-File -Append -Encoding utf8 -FilePath $logFolder\$tokenName.csv
 }
 
 
@@ -241,7 +241,7 @@ function Set-Configuration(){
         [Parameter(Mandatory = $true)] $ConfigValue,
         [Parameter(Mandatory = $true)][string] $ConfigName,
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
-        [Parameter(Mandatory = $false)][switch] $Silent
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
 
     $configContent = Get-Content -Path $filePath -Raw
@@ -267,7 +267,7 @@ function Set-Offset(){
     param (
         [Parameter(Mandatory = $true)][string] $Offset,
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
-        [Parameter(Mandatory = $true)][switch] $Silent
+        [Parameter(Mandatory = $true)][bool] $Silent = $false
     )
 
     $configContent = Get-Content -Path $filePath -Raw
@@ -293,7 +293,7 @@ function Set-Offset(){
 function Get-Offset() {
     param (
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
-        [Parameter(Mandatory = $false)][switch] $Silent
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
         
     $config = Get-Content -Path $filePath
@@ -349,7 +349,7 @@ function Set-WalletSecret {
 function Get-WalletSecret {
     param (
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
-        [Parameter(Mandatory = $false)][switch] $Silent
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
 
     # Ensure the file exists
@@ -396,7 +396,7 @@ function Set-TelegramToken {
 function Get-TelegramToken {
     param (
         [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
-        [Parameter(Mandatory = $false)][switch] $Silent
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
 
     # Ensure the file exists
@@ -532,7 +532,7 @@ function Get-TokenBalance(){
     (
         [Parameter(Mandatory = $true)][string] $WalletAddress,
         [Parameter(Mandatory = $true)][string] $TokenCode,
-        [Parameter(Mandatory = $false)][switch] $Silent
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
 
     )
 
@@ -570,13 +570,15 @@ function Recover-BuyIn() {
         [Parameter(Mandatory = $true)][double] $BuyPrice,
         [Parameter(Mandatory = $true)][double] $SellPercentage,
         [Parameter(Mandatory = $true)][datetime] $BuyTime,
-        [Parameter(Mandatory = $false)][switch] $DoNotRecoverBuyIn
+        [Parameter(Mandatory = $false)][switch] $DoNotRecoverBuyIn,
+        [Parameter(Mandatory = $false)][bool] $Silent = $false, 
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
     
     if($doNotRecoverBuyIn){
         Write-Host "Skipping recovering the buyin" -ForegroundColor Yellow
-        Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
+        Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $silent -CollectDataOnly $collectDataOnly
     }
     else{
         [double]$newPrice = Get-TokenPrice -TokenCode $TokenCode -TokenIssuer $TokenIssuer
@@ -612,14 +614,13 @@ function Recover-BuyIn() {
         }
         if($newPrice -ge $stopUpperLimit){
             Write-Host "price above $($amountOfTokenToSell)% @ ($($stopUpperLimit))" -ForegroundColor Green
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) above $($sellPercentage)%" -Silent
+            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) above $($sellPercentage)%" -Silent $silent
             Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellPrice $stopUpperLimit -AmountOfTokenToSell $amountOfTokenToSell -Slipage 0.02 -Message "- Token above $($sellPercentage)%" -ContinueOnPriceFall
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "Recovery completed for $($tokenName)" -Silent
-            Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
+            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "Recovery completed for $($tokenName)" -Silent $silent
+            Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $silent -CollectDataOnly $collectDataOnly
         }
     }
 }
-
 
 function SellConservativly() {
     Param (
@@ -629,7 +630,9 @@ function SellConservativly() {
         [Parameter(Mandatory = $true)][double] $SellAtPercentage,
         [Parameter(Mandatory = $true)][double] $SellAmountPercentage,
         [Parameter(Mandatory = $false)][double] $LowerLimit = 20,
-        [Parameter(Mandatory = $true)][datetime] $BuyTime
+        [Parameter(Mandatory = $true)][datetime] $BuyTime,
+        [Parameter(Mandatory = $false)][bool] $Silent = $false, 
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
     [double]$newPrice = Get-TokenPrice -TokenCode $TokenCode -TokenIssuer $TokenIssuer
@@ -661,7 +664,7 @@ function SellConservativly() {
     }
     if($newPrice -gt $stopUpperLimit){
         Write-Host "price above $($stopNumber) upper limit ($($stopUpperLimit))" -ForegroundColor Green
-        Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) above $($sellAtPercentage)" -Silent
+        Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) above $($sellAtPercentage)" -Silent $silent
         Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellPrice $stopUpperLimit -AmountOfTokenToSell 100 -Slipage 0.03 -Message "- Token above $($sellAtPercentage)" -ContinueOnPriceFall        
     }
 }
@@ -673,7 +676,9 @@ function Monitor-EstablishedPosition {
         [Parameter(Mandatory = $false)] $StopNumber = 1,
         [Parameter(Mandatory = $true)][double] $BuyPrice,
         [Parameter(Mandatory = $true)][datetime] $BuyTime,
-        [Parameter(Mandatory = $false)][string] $StopsFilePath = '.\config\stops.csv'
+        [Parameter(Mandatory = $false)][string] $StopsFilePath = '.\config\stops.csv',
+        [Parameter(Mandatory = $false)][bool] $Silent = $false, 
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
     # Get the current price
@@ -686,8 +691,13 @@ function Monitor-EstablishedPosition {
     # if you clear all the stops, sell all
     if ($stopNumber -gt (($stopLevels.count)-1)) {
         Write-Host "All stops completed, selling remaining tokens."
-        Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "All stops completed for $($tokenName), selling all." -Silent
-        Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -AmountOfTokenToSell 100 -Slipage 0.1 -Message "- No further stops programmed"
+        Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "All stops completed for $($tokenName), selling all." -Silent $silent
+        if(!$collectDataOnly){
+            Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -AmountOfTokenToSell 100 -Slipage 0.1 -Message "- No further stops programmed"
+        }
+        else{
+            Write-Host "Sell-Token - All stops completed (if not data collection only)" -ForegroundColor Red -BackgroundColor Black
+        }
     }
     else{
         [double]$stopLowerLimit = $buyPrice * ($stopLevels.stopLowerLimit[$stopNumber-1] /100)
@@ -717,17 +727,22 @@ function Monitor-EstablishedPosition {
         # you've moved through the stop
         if($newPrice -gt $stopUpperLimit){
             Write-Host "Reached upperlimit for $stopNumber (target: $stopUpperLimit)" -ForegroundColor Green
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) Reached stop upperlimit for $($stopNumber)" -Silent        
+            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) Reached stop upperlimit for $($stopNumber)" -Silent $silent    
             $stopNumber++
-            Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber $stopNumber        
+            Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber $stopNumber -Silent $silent -CollectDataOnly $collectDataOnly 
         }
 
         # Sell if it drops below the stop     
         if($newPrice -lt $stopLowerLimit){        
             Write-Host "$($tokenName) fell below stop $($stopNumber) lower stop" -ForegroundColor Red
-            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) fell below stop $($stopNumber) lower stop" -Silent        
-            Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -AmountOfTokenToSell 100 -Slipage 0.5 -Message "- $($tokenName) fell below stop $($stopNumber) lower stop"
-            exit
+            Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "$($tokenName) fell below stop $($stopNumber) lower stop" -Silent $silent     
+            if(!$collectDataOnly){
+                Sell-Token -TokenIssuer $tokenIssuer -TokenCode $tokenCode -AmountOfTokenToSell 100 -Slipage 0.5 -Message "- $($tokenName) fell below stop $($stopNumber) lower stop"
+                exit
+            }
+            else{
+                Write-Host "Sell-Token (if not data collection only)" -ForegroundColor Red -BackgroundColor Black
+            }
         }    
     }
 }
@@ -736,7 +751,7 @@ function Get-TrustLines(){
     Param
     (
         [Parameter(Mandatory = $true)][string] $WalletAddress,
-        [Parameter(Mandatory = $false)][switch] $Silent
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
 
     $uri = "https://s1.ripple.com:51234"  # Mainnet JSON-RPC endpoint
@@ -762,7 +777,7 @@ function Get-TrustLines(){
         Write-Host "Trust lines for account $walletAddress :" -ForegroundColor Green
         foreach ($line in $trustLines) {
             $currency = $line.currency
-            $tokenName = Get-TokenName -Silent
+            $tokenName = Get-TokenName -Silent $silent
             $tokenIssuer = $line.account
             $balance = $line.balancefalse
             $limit = $line.limit
@@ -779,7 +794,7 @@ function Get-TokenNameFromCode {
     Param
     (
         [Parameter(Mandatory = $true)][string] $TokenCode,
-        [Parameter(Mandatory = $false)][switch] $Silent
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
     
     if ($tokenCode -eq 'test') {
@@ -838,7 +853,8 @@ function Sleep-WithPriceChecks {
         [Parameter(Mandatory = $true)] $TokenCode,        
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
         [Parameter(Mandatory = $false)][int] $StartIncriment = 0,
-        [Parameter(Mandatory = $false)][string] $BuyConditionsFilePath = '.\config\buyConditions.csv'
+        [Parameter(Mandatory = $false)][string] $BuyConditionsFilePath = '.\config\buyConditions.csv',
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
     
@@ -922,13 +938,14 @@ function Monitor-NewTokenPrice(){
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
         [Parameter(Mandatory = $true)] [double] $InitialPrice,
-        [Parameter(Mandatory = $false)] $StartIncriment = 0
+        [Parameter(Mandatory = $false)] $StartIncriment = 0,
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
     Write-Host "Initial Price = $($initialPrice)" -ForegroundColor Yellow
     Write-Host "Waiting for $($waitTime) seconds"
     
-    $action = Sleep-WithPriceChecks -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment
+    $action = Sleep-WithPriceChecks -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
     
     if($action -eq "buy"){
         return $action
@@ -1111,7 +1128,7 @@ function Get-TokenPrice(){
     (
         [Parameter(Mandatory = $false)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
-        [Parameter(Mandatory = $false)][switch] $Silent 
+        [Parameter(Mandatory = $false)][bool] $Silent = $false 
     )
     
     Write-Host "getting price " -NoNewline     
@@ -1215,7 +1232,7 @@ function Get-TokenNameFromAlert(){
     Param
     (
         [Parameter(Mandatory = $true)][string] $Alert,
-        [Parameter(Mandatory = $false)][switch] $Silent 
+        [Parameter(Mandatory = $false)][bool] $Silent = $false 
     )        
     # Grab the 2nd line from the alert and remove the icon from the start
     $tokenName = ($alert -split "`n")[1]
@@ -1230,7 +1247,7 @@ function Get-TokenIssuerFromAlert(){
     Param
     (
         [Parameter(Mandatory = $true)] $Alert,
-        [Parameter(Mandatory = $false)][switch] $Silent 
+        [Parameter(Mandatory = $false)][bool] $Silent = $false 
     ) 
 
     $tokenIssuer = ($alert -split "`n")[2]
@@ -1244,7 +1261,7 @@ function Get-AlertTypeFromAlert(){
     Param
     (
         [Parameter(Mandatory = $true)] $Alert,
-        [Parameter(Mandatory = $false)][switch] $Silent 
+        [Parameter(Mandatory = $false)][bool] $Silent = $false 
     ) 
 
     $alertType = ($alert -split "`n")[0]
@@ -1279,7 +1296,7 @@ function Send-TelegramMessage(){
         [Parameter(Mandatory = $true)][string] $ChatId,
         [Parameter(Mandatory = $true)][string] $Message,
         [Parameter(Mandatory = $false)] $TelegramToken = '7529656216:AAFliY-icP_51zmhKAscBoPOAwz88xo0HPA',
-        [Parameter(Mandatory = $false)][switch] $Silent  
+        [Parameter(Mandatory = $false)][bool] $Silent = $false  
     )
     
     $uri = "https://api.telegram.org/bot$($telegramToken)/sendMessage"
@@ -1509,12 +1526,12 @@ function Get-TelegramChat(){
             [Parameter(Mandatory = $true)] $TelegramToken, 
             [Parameter(Mandatory = $true)][string] $TelegramGroup, 
             [Parameter(Mandatory = $false)][int] $Offset = "",
-            [Parameter(Mandatory = $false)][switch] $Silent
+            [Parameter(Mandatory = $false)][bool] $Silent = $false
         ) 
 
     $uri = "https://api.telegram.org/bot$($telegramToken)/getUpdates"
     if($offset -eq ""){
-        [int] $offset = Get-Offset -Silent
+        [int] $offset = Get-Offset -Silent $silent
         if(!$silent){
             Write-Host "Stored offset = $($offset)" -ForegroundColor Magenta
         }
@@ -1530,7 +1547,7 @@ function Get-TelegramChat(){
     if(!$silent){
         Write-Host "UpdateID = $($updateId)" -ForegroundColor Magenta
     }
-    Set-Configuration -ConfigName 'offset' -ConfigValue $updateId -Silent
+    Set-Configuration -ConfigName 'offset' -ConfigValue $updateId -Silent $silent
 
     if(!$silent){
         $alert = $response[$response.count -1].message.text
@@ -1549,13 +1566,51 @@ function Get-TelegramChat(){
     return $response
 }
 
+
+
+function Monitor-Token(){
+    Param(
+        [Parameter(Mandatory = $false)] $TokenCombination = "",
+        [Parameter(Mandatory = $false)] $TokenCode = "",
+        [Parameter(Mandatory = $false)] $TokenIssuer = "", 
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly
+    )
+
+    if($tokenCombination -ne ""){
+        $tokenCode = $tokenCombination.Split('/')[1]        
+        $tokenIssuer = $tokenCombination.Split('/')[0]
+    }
+    
+    Set-TokenIssuer -TokenIssuer $tokenIssuer
+    Set-TokenName -TokenName $tokenName
+    
+    $tokenCode = Get-TokenCodeFromName -TokenName $tokenName
+    Set-TokenCode -TokenCode $tokenCode 
+    Test-TokenCode -TokenCode $tokenCode -TokenName $tokenName -TokenIssuer $tokenIssuer
+    $tokenCode = Get-TokenCode
+    
+    $tokenSupply = Get-TokenSupplyFromAlert -Alert -$newTokenAlert
+    Set-TokenSupply -TokenSupply $tokenSupply
+    Log-Token -Action NewToken -TokenName -$tokenName
+
+    # Get the initial price of the new token                    
+    [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+
+    while($null -eq $initialPrice){
+        [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+    }
+
+    # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
+    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -CollectDataOnly collectDataOnly 
+}
+
 function Monitor-Alerts(){
-    Param
-        (
-            [Parameter(Mandatory = $true)] $TelegramToken,
-            [Parameter(Mandatory = $false)][switch] $Silent,          
-            [Parameter(Mandatory = $false)] $WaitTime = 600 # In seconds
-        )
+    Param(
+        [Parameter(Mandatory = $true)] $TelegramToken,
+        [Parameter(Mandatory = $false)][bool] $Silent,          
+        [Parameter(Mandatory = $false)][bool] $CollectDataOnly,
+        [Parameter(Mandatory = $false)] $WaitTime = 600 # In seconds
+    )
     $standardBuy = Get-StandardBuy
     $userTelegramGroup = Get-UserTelegramGroup
     $adminTelegramGroup = Get-AdminTelegramGroup
@@ -1566,13 +1621,13 @@ function Monitor-Alerts(){
     while($loop -eq $true){
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 2 
-        $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent 
+        $chat = Get-TelegramChat -TelegramToken $telegramToken -TelegramGroup $adminTelegramGroup -Silent $true
         
         if($chat.count -gt $count){
             $i = $chat.count - $count 
             $newTokenAlert = $chat[$chat.count -$i].message.text
             $i--
-            $alertType = Get-AlertTypeFromAlert -Alert $newTokenAlert -Silent
+            $alertType = Get-AlertTypeFromAlert -Alert $newTokenAlert -Silent $true
             
             # Set Standard buy
             if($newTokenAlert -like "*standardbuy*"){
@@ -1621,9 +1676,9 @@ function Monitor-Alerts(){
                 }
 
                 # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice                  
+                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -CollectDataOnly collectDataOnly              
                 while($action -eq 'hold'){
-                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment 240                      
+                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment 240 -CollectDataOnly collectDataOnly
                 }
                 if($action -eq 'buy'){
                     Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
@@ -1631,10 +1686,10 @@ function Monitor-Alerts(){
                     $buyTime = Get-Date
                     $buyPrice = Get-BuyPrice
                     #Monitor-NewPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                    Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn
+                    Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn -Silent $true -CollectDataOnly collectDataOnly
                     #Monitor-ExistingPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                    #SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime
-                    #Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1
+                    #SellConservativly -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime -Silent $true
+                    #Monitor-EstablishedPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1  -Silent $true
                     $loop = $false
                     break
                 } 
