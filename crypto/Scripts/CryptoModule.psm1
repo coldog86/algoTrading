@@ -1604,7 +1604,7 @@ function Monitor-Token(){
     }
 
     # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -CollectDataOnly collectDataOnly 
+    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -CollectDataOnly $collectDataOnly 
 }
 
 function Monitor-Alerts(){
