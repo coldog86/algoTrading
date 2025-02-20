@@ -21,6 +21,12 @@ function Log-Price(){
         [Parameter(Mandatory = $false)][string] $TokenName,
         [Parameter(Mandatory = $false)][string] $LogFolder = ".\log"
     )
+    $filePath = "$logFolder\$tokenName.csv"
+
+    if (!(Test-Path -Path $filePath)) {
+        # Create file and add header 
+        "timestamp,price,token name" > $logFolder\$tokenName.csv
+    } 
     #$tokenSupply = Get-TokenSupply
     $time = Get-Date -Format "HH:mm:ss"    
     $date = Get-Date -Format "yyyy-MM-dd"
