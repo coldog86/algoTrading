@@ -1,6 +1,6 @@
 [Parameter(Mandatory = $false)][string] $Branch = 'Beta'
 [Parameter(Mandatory = $false)][switch] $UseDefaultConfig
-[Parameter(Mandatory = $false)][bool] $CollectDataOnly
+[Parameter(Mandatory = $false)][bool] $CollectDataOnly = $false
 [Parameter(Mandatory = $false)][bool] $Silent = $true
 [Parameter(Mandatory = $false)][switch] $NoWriteBack
 [Parameter(Mandatory = $false)][switch] $NoClip
