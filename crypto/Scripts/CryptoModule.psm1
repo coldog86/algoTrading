@@ -805,7 +805,8 @@ function Get-TokenNameFromCode {
     # Ensure the token code is 40 characters long (160 bits)
     if ($tokenCode.Length -ne 40) {
         Write-Host "Error: Token code should be exactly 40 characters (160 bits)" -ForegroundColor Red
-        return
+        $tokenName = $TokenCode
+        return $tokenName 
     }
 
     # Convert the hexadecimal string to a byte array
