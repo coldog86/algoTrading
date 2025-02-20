@@ -54,7 +54,7 @@ function Run-BolleringBandStrategy {
             Write-Host "New data saved to: $csvFilePath" -ForegroundColor Cyan
         
             # Calculate best Bollinger Bands paramaters
-            $gridResults = Run-BollingerBandsGridSearch -CsvFile $csvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage = 0.05
+            $gridResults = Run-BollingerBandsGridSearch -CsvFile $csvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05
             $gridResults = $gridResults | Sort-Object -Descending TotalROI
             $bollingerBandParameters = $gridResults[0]
         }
