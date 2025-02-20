@@ -2,6 +2,7 @@
 [Parameter(Mandatory = $false)][switch] $UseDefaultConfig
 [Parameter(Mandatory = $false)][bool] $CollectDataOnly = $false
 [Parameter(Mandatory = $false)][bool] $Silent = $true
+[Parameter(Mandatory = $false)][switch] $PullRepoOnly
 [Parameter(Mandatory = $false)][switch] $NoWriteBack
 [Parameter(Mandatory = $false)][switch] $NoClip
 [Parameter(Mandatory = $false)][string] $FileName = 'CryptoModule.psm1'
@@ -23,8 +24,9 @@ if($ignoreInit){
 } else {
     Init -Branch $branch
 }
-
-Monitor-Alerts -TelegramToken $telegramToken -Silent $silent -CollectDataOnly $collectDataOnly
+if(!$pullRepoOnly){
+    Monitor-Alerts -TelegramToken $telegramToken -Silent $silent -CollectDataOnly $collectDataOnly
+}
 
 
 
