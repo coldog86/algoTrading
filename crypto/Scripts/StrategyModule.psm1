@@ -14,7 +14,10 @@ function Run-BolleringBandStrategy {
     Write-Host "Starting live trading with Bollering Band strategy..." -ForegroundColor Green
     while ($true) {
         $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+        $currentPrice
+        $TokenName
         Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token 
+        break
         if($i -eq 5){
 
             $i++
