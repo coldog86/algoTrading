@@ -8,12 +8,17 @@ function Run-BolleringBandStrategy {
         [Parameter(Mandatory = $true)][string] $TokenName,
         [Parameter(Mandatory = $false)][string] $LogFolder = ".\log"
     )
-    $i = 6 # starting at 5 so we initially kick off the whole loop
+    $i = 5 # starting at 5 so we initially kick off the whole loop
+    $tokenCode = Get-TokenCode
+    $tokenIssuer = Get-TokenIssuer
     Write-Host "Starting live trading with Bollering Band strategy..." -ForegroundColor Green
     while ($true) {
         $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
         Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token 
+        if($i -eq 5){
 
+            $i++
+        }
         # Every minute do this...
         if($i % 6 -eq 0){
             # get the live CSV data for the token
@@ -164,8 +169,8 @@ function Run-StopLossStrategy {
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
-    # Get the current price
     [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+    $tokenName = Get-TokenName
     Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token 
     
     $stopLevels = Import-Csv -Path $stopsFilePath
