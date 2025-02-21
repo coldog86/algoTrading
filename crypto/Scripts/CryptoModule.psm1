@@ -888,13 +888,12 @@ function Test-StopLossBuyConditions {
     Write-Progress -Activity $progressActivity -Status "Completed" -PercentComplete 100
 }
 
-function Monitor-NewTokenPrice(){
+function Run-Strategy(){
     Param
     (
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
         [Parameter(Mandatory = $true)][string][ValidateSet('StopLoss', 'BolleringBands')] $Strategy,
-        [Parameter(Mandatory = $true)] [double] $InitialPrice,
         [Parameter(Mandatory = $false)] $StartIncriment = 0,
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
@@ -903,9 +902,13 @@ function Monitor-NewTokenPrice(){
     Write-Host "Waiting for $($waitTime) seconds"
     
     $tokenName = Get-TokenName
-
+    
     if($strategy -eq 'StopLoss'){
-        Write-Host "Running stratergy; $($strategy)"
+        Write-Host "Running stratergy; $($strategy)"        
+        [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+        while($null -eq $initialPrice){
+            [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+        }
         $action = Test-StopLossBuyConditions -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
     }
     
@@ -1522,15 +1525,8 @@ function Monitor-Token(){
     
     Log-Token -Action NewToken -TokenName -$tokenName
 
-    # Get the initial price of the new token                    
-    [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-
-    while($null -eq $initialPrice){
-        [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-    }
-
     # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -InitialPrice $initialPrice -CollectDataOnly $collectDataOnly 
+    $action = Run-Strategy -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -CollectDataOnly $collectDataOnly 
 }
 
 function Monitor-Alerts(){
@@ -1606,9 +1602,9 @@ function Monitor-Alerts(){
                 }
 
                 # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-                $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -InitialPrice $initialPrice -CollectDataOnly collectDataOnly              
+                $action = Run-Strategy -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -CollectDataOnly collectDataOnly              
                 while($action -eq 'hold'){
-                    $action = Monitor-NewTokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -InitialPrice $initialPrice -StartIncriment 240 -CollectDataOnly collectDataOnly
+                    $action = Run-Strategy -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -StartIncriment 240 -CollectDataOnly collectDataOnly
                 }
                 if($action -eq 'buy'){
                     Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
