@@ -17,7 +17,7 @@ function Run-BolleringBandStrategy {
         Write-Host "currentPrice = $($currentPrice)"
         Write-Host "currentPrice = $($TokenName)"
         Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token 
-        break
+        
         if($i -eq 5){
 
             $i++
