@@ -776,119 +776,29 @@ function Sleep-WithProgress {
     Write-Progress -Activity $progressActivity -Status "Completed" -PercentComplete 100
 }
 
-
-function Test-StopLossBuyConditions {
-    param (        
-        [Parameter(Mandatory = $true)][double] $InitialPrice,           
-        [Parameter(Mandatory = $true)] $TokenCode,        
+function Run-StrategyToDecideExit(){
+    Param
+    (
+        [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
-        [Parameter(Mandatory = $false)][int] $StartIncriment = 0,
-        [Parameter(Mandatory = $false)][string] $BuyConditionsFilePath = '.\config\buyConditions.csv',
+        [Parameter(Mandatory = $true)][string][ValidateSet('StopLoss', 'BolleringBands')] $Strategy,
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
-    
-    $buyConditions = Import-Csv -Path $buyConditionsFilePath
-    $buyConditions
-    $number = $buyConditions.count-1
-    $seconds = $buyConditions.Seconds[$number]
-
-    Write-Host "Monitoring for $($seconds) seconds"
-    $progressActivity = "Monitoring for $seconds seconds"
-    $progressStatus = "Time remaining"
-    # Array to track the percentage increases
-    $percentageHistory = @()
-
-    for ($i = $startIncriment; $i -lt $seconds; $i++) {   
-        $percentComplete = [int](($i / $seconds) * 100)
-        $timeRemaining = $seconds - $i
-        [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-        [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100)
-        Log-Price -TokenName $tokenName -TokenPrice $newPrice # log all the price data for a token 
-
-        # Track the percentage increase for last 2 iterations
-        $percentageHistory += $percentageIncrease
-        if ($percentageHistory.Count -gt 2) {
-            $percentageHistory = $percentageHistory[-2..-1]
-        }
-
-        # Add this check to only buy if price has not jumped +50% in the last 2 iterations
-        if ($percentageHistory.Count -eq 2) {
-            $lastIncreaseDiff = [math]::Abs($percentageHistory[-1] - $percentageHistory[-2])
-            if ($lastIncreaseDiff -gt 50) {
-                Write-Host "Skipping buy action: Price change is too volatile ($lastIncreaseDiff% change)" -ForegroundColor Yellow
-                continue
-            }
-        }
-
-        # Every 10 iterations show total percentage change
-        if($i % 10 -eq 0){
-            Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-            Write-Host "percentageIncreaseRequired = $($percentageIncreaseRequired)" -ForegroundColor Magenta
-
-            # Validate that the price hasn't dropped to < 15%
-            if($percentageIncrease -lt -85){
-                Write-Host "Price has flatlined" -ForegroundColor Red
-            }
-        }
-
-        # Work out the required percentage increase as per buy conditions CSV
-        $percentageIncreaseRequired = 250
-        foreach ($buyCondition in $buyConditions){
-            if($i -lt $buyCondition.Seconds){
-                $percentageIncreaseRequired = $buyCondition.BuyCondition
-                break
-            }
-        }
-
-        # Buy logic
-        if($percentageIncrease -gt $percentageIncreaseRequired){
-            Write-Host "Price increase" -ForegroundColor Green
-            Write-Host "Current  Price = $($newPrice)"
-            Write-Host "The percentage increase is $($percentageIncrease)%" -ForegroundColor Magenta
-            Write-Host "Buy token" -ForegroundColor Green
-            $action = "buy"
-            Log-Token -Action BuyToken -TokenName -$tokenName -PercentageIncrease $percentageIncrease
-            # Stop and remove the progress bar
-            Write-Progress -Activity "Processing" -Completed
-            return $action
-        }
-        
-        [double]$newPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-
-        if($newPrice -gt $initialPrice){
-            Write-Host "Price increase" -ForegroundColor Green
-            Write-Host "Initial Price = $($initialPrice)"
-            Write-Host "Current  Price = $($newPrice)"
-            [double]$percentageIncrease = "{0:F2}" -f ((($newPrice - $initialPrice) / $initialPrice) * 100) # only show to 2 decimal places
-            
-            Write-Host "Token gained, but not enough: hold" -ForegroundColor Red
-            $action = "hold"
-            return $action
-        
-        } else {
-            if($percentageIncrease -gt -35){
-                Write-Host "Price decreased $($percentageIncrease)" -ForegroundColor Red
-                Log-Token -Action Distroy -TokenName -$tokenName
-                $action = "abandone"
-                return $action
-            } 
-            else{            
-                Write-Host "Token lost, but not much: hold" -ForegroundColor Red
-                $action = "hold"
-                return $action
-            }
-        }
-
-        Write-Progress -Activity $progressActivity -Status "$progressStatus : $timeRemaining seconds" -PercentComplete $percentComplete
-        Start-Sleep -Seconds 1
+    if($strategy -eq 'StopLoss'){
+        $buyTime = Get-Date
+        $buyPrice = Get-BuyPrice
+                    
+        Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn -Silent $true -CollectDataOnly $collectDataOnly
+        #Run-SellConservativlyStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime -Silent $true
+        #Run-StopLossStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $true
     }
-
-    # Complete the progress bar
-    Write-Progress -Activity $progressActivity -Status "Completed" -PercentComplete 100
+    if($strategy -eq 'BolleringBands'){
+        Write-Host "Buy with bollering bands strategy"
+    }
 }
 
-function Run-Strategy(){
+function Run-StrategyToDecideEntry(){
     Param
     (
         [Parameter(Mandatory = $true)][string] $TokenCode,
@@ -903,6 +813,7 @@ function Run-Strategy(){
     
     $tokenName = Get-TokenName
     
+    # Stop Loss strategy
     if($strategy -eq 'StopLoss'){
         Write-Host "Running stratergy; $($strategy)"        
         [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
@@ -912,6 +823,7 @@ function Run-Strategy(){
         $action = Test-StopLossBuyConditions -TokenCode $tokenCode -TokenIssuer $tokenIssuer -InitialPrice $initialPrice -StartIncriment $startIncriment -CollectDataOnly $collectDataOnly
     }
     
+    # Bollering Bands strategy
     if($strategy -eq 'BolleringBands'){
         Write-Host "Running stratergy; $($strategy)"
         $action = Run-BolleringBandStrategy -TokenName $tokenName
@@ -1526,7 +1438,7 @@ function Monitor-Token(){
     Log-Token -Action NewToken -TokenName -$tokenName
 
     # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-    $action = Run-Strategy -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -CollectDataOnly $collectDataOnly 
+    $action = Run-StrategyToDecideEntry -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -CollectDataOnly $collectDataOnly 
 }
 
 function Monitor-Alerts(){
@@ -1601,20 +1513,17 @@ function Monitor-Alerts(){
                     [double]$initialPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
                 }
 
-                # Monitor the token to see if price has increases within the time as defined in the BuyConditions CSV
-                $action = Run-Strategy -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -CollectDataOnly collectDataOnly              
+                # Select a strategy to decide wheather to enter a trade
+                $action = Run-StrategyToDecideEntry -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -CollectDataOnly $collectDataOnly              
                 while($action -eq 'hold'){
-                    $action = Run-Strategy -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -StartIncriment 240 -CollectDataOnly collectDataOnly
+                    $action = Run-StrategyToDecideEntry -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy -StartIncriment 240 -CollectDataOnly $collectDataOnly
                 }
                 if($action -eq 'buy'){
                     Create-TrustLine -TokenIssuer $tokenIssuer -TokenCode $tokenCode
                     Buy-Token -XrpAmount $standardBuy -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-                    $buyTime = Get-Date
-                    $buyPrice = Get-BuyPrice
-                    #Monitor-NewPosition -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime
-                    Recover-BuyIn -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -SellPercentage 160 -DoNotRecoverBuyIn -Silent $true -CollectDataOnly collectDataOnly
-                    #Run-SellConservativlyStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -SellAtPercentage 125 -BuyPrice $buyPrice -BuyTime $buyTime -Silent $true
-                    #Run-StopLossStrategy -TokenIssuer $tokenIssuer -TokenCode $tokenCode -BuyPrice $buyPrice -BuyTime $buyTime -StopNumber 1 -Silent $true
+                    
+                    # Select a strategy to decide when to sell
+                    Run-StrategyToDecideExit -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Strategy $strategy                    
                     $loop = $false
                     break
                 } 
