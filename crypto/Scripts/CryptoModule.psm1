@@ -112,17 +112,24 @@ function Set-WalletAddress(){
 
 function Get-WalletAddress(){
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
         
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "walletAddress:*"){
             $walletAddress = $line.Split(': ')[2]
-            Write-Host "Wallet address = $($walletAddress)" -ForegroundColor Green
+            if(!$silent){
+                Write-Host "Wallet address = $($walletAddress)" -ForegroundColor Green
+            }
             return $walletAddress
         }
-    }    
+    }  
+    if(!$silent){
+        write-host "Wallet address not found in config" -ForegroundColor Red
+        return
+    }  
 }
 
 function Create-PythonScripts(){
@@ -166,16 +173,23 @@ function Set-UserTelegramGroup(){
 
 function Get-UserTelegramGroup() {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
         
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "userTelegramGroup:*"){
             $userTelegramGroup = $line.Split(': ')[2]
-            Write-Host "User Telegram Group = $($userTelegramGroup)" -ForegroundColor Green
+            if(!$silent){
+                Write-Host "User Telegram Group = $($userTelegramGroup)" -ForegroundColor Green
+            }
             return $userTelegramGroup
         }
+    }
+    if(!$silent){
+        write-host "User Telegram group not found in config" -ForegroundColor Red
+        return
     }
 }
 
@@ -199,16 +213,23 @@ function Set-AdminTelegramGroup(){
 
 function Get-AdminTelegramGroup() {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
         
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "adminTelegramGroup:*"){
             $adminTelegramGroup = $line.Split(': ')[2]
-            Write-Host "Admin Telegram Group = $($adminTelegramGroup)" -ForegroundColor Green
+            if(!$silent){
+                Write-Host "Admin Telegram Group = $($adminTelegramGroup)" -ForegroundColor Green
+            }
             return $adminTelegramGroup
         }
+    }
+    if(!$silent){
+        write-host "Admin Telegram Group not found in config" -ForegroundColor Red
+        return
     }
 }
 
@@ -234,16 +255,23 @@ function Set-StandardBuy(){
 
 function Get-StandardBuy() {
     param (
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
         
     $config = Get-Content -Path $filePath
     foreach($line in $config){
         if($line -like "standardBuy:*"){
             $standardBuy = $line.Split(': ')[2]
-            Write-Host "Standard buy = $($standardBuy)" -ForegroundColor Green
+            if(!$silent){
+                Write-Host "Standard buy = $($standardBuy)" -ForegroundColor Green
+            }
             return $standardBuy
         }
+    }
+    if(!$silent){
+        write-host "Standard Buy not found in config" -ForegroundColor Red
+        return
     }
 }
 
@@ -316,6 +344,10 @@ function Get-Offset() {
             }
             return $offset
         }
+    }    
+    if(!$silent){
+        write-host "Offset not found in config" -ForegroundColor Red
+        return
     }
 }
 
@@ -368,7 +400,6 @@ function Get-WalletSecret {
         Write-Host "Error: config.txt not found!" -ForegroundColor Red
         return
     }
-
      
     $config = Get-Content -Path $filePath
     foreach($line in $config){
@@ -458,19 +489,18 @@ function Get-VersionNumber {
      
     $config = Get-Content -Path $filePath
     foreach($line in $config){
-        if($line -like "versionNumber:*"){ 
+        if($line -like "*VersionNumber:*"){ 
+            $versionNumber = $line.Split(': ')[2]  
             if(!$silent){
-                write-host $line -ForegroundColor cyan
+                write-host "Version Number = $($versionNumber)" -ForegroundColor cyan
             }
-            return $line
-        }
-        else{
-            if(!$silent){
-                write-host "Version number not found in config" -ForegroundColor Red
-                return
-            }
+            return $versionNumber
         }
     }
+    if(!$silent){
+        write-host "Version number not found in config" -ForegroundColor Red
+        return
+    }    
 }
 
 function Create-Script(){
