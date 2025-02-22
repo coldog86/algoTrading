@@ -468,6 +468,7 @@ function Get-VersionNumber {
         else{
             if(!$silent){
                 write-host "Version number not found in config" -ForegroundColor Red
+                return
             }
         }
     }
