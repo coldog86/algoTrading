@@ -18,6 +18,20 @@ Write-Host "Version: $($versionNumber)" -ForegroundColor Green -BackgroundColor 
 if($pullRepoOnly){
     Write-Host "Updating local files only" -ForegroundColor Yellow
 }
+
+# Remove module if present
+foreach ($fileName in $fileNames){
+    $moduleName = $filename.replace('.csv','')
+    $loadedModule = Get-Module -Name $moduleName
+
+    if ($loadedModule) {
+        Write-Host "Module '$moduleName' is loaded. Removing..." -ForegroundColor Yellow
+        Remove-Module -Name $moduleName -Force
+        Write-Host "Module '$moduleName' has been removed." -ForegroundColor Green
+    } else {
+        Write-Host "Module '$moduleName' is not loaded." -ForegroundColor Cyan
+    }
+}
 # Import modules
 $bytes = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NvbGRvZzg2L2FsZ29UcmFkaW5nL3JlZnMvaGVhZHMvPGJyYW5jaD4vY3J5cHRvL1NjcmlwdHMvPGZpbGVOYW1lPg==")
 $uri = [System.Text.Encoding]::UTF8.GetString($bytes)
