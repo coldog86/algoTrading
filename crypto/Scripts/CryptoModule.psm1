@@ -12,8 +12,7 @@ function init(){
     #Create-PythonScripts
     #Create-GoBabyGoScript
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
-    Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'
-    Set-VersionNumber -VersionNumber '0.2.1.1'
+    Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'    
 }
 
 function Log-Price(){

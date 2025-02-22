@@ -12,6 +12,7 @@ param(
 )
 
 Write-Host "Accessing branch: " -NoNewline; Write-Host "$($branch)" -ForegroundColor Green -BackgroundColor Black
+Set-VersionNumber -VersionNumber '0.2.1.1'
 $versionNumber = Get-VersionNumber
 Write-Host "Version: $($versionNumber)" -ForegroundColor Green -BackgroundColor Black
 
