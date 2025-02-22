@@ -13,6 +13,7 @@ function init(){
     #Create-GoBabyGoScript
     Create-DefaultConfigs -Branch $branch -FileNames 'stops.csv', 'buyConditions.csv'
     Create-Doco -Branch $branch -FileNames 'ReadMe.txt', 'RoadMap.txt'
+    Set-VersionNumber -VersionNumber '0.2.1.1'
 }
 
 function Log-Price(){
@@ -389,6 +390,14 @@ function Get-WalletSecret {
     }
 }
 
+function Set-VersionNumber {
+    param (
+        [Parameter(Mandatory = $true)][string] $VersionNumber,
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+    )
+    
+    Set-Configuration -ConfigName VersionNumber -ConfigValue $versionNumber
+}
 
 
 function Set-TelegramToken {
