@@ -445,6 +445,33 @@ function Get-TelegramToken {
     }
 }
 
+function Get-VersionNumber {
+    param (
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
+    )
+
+    # Ensure the file exists
+    if (-Not (Test-Path $filePath)) {
+        Write-Host "Error: config.txt not found!" -ForegroundColor Red
+        return
+    }
+     
+    $config = Get-Content -Path $filePath
+    foreach($line in $config){
+        if($line -like "versionNumber:*"){ 
+            if(!$silent){
+                write-host $line -ForegroundColor cyan
+            }
+            return $line
+        }
+        else{
+            if(!$silent){
+                write-host "Version number not found in config" -ForegroundColor Red
+            }
+        }
+    }
+}
 
 function Create-Script(){
     param (

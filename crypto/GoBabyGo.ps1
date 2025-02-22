@@ -12,7 +12,8 @@ param(
 )
 
 Write-Host "Accessing branch: " -NoNewline; Write-Host "$($branch)" -ForegroundColor Green -BackgroundColor Black
-# $Version = "0.2.$(git rev-list --count HEAD)"
+$versionNumber = Get-VersionNumber
+Write-Host "Version: $($versionNumber)" -ForegroundColor Green -BackgroundColor Black
 
 if($pullRepoOnly){
     Write-Host "Updating local files only" -ForegroundColor Yellow
