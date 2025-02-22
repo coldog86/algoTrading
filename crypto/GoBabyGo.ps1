@@ -38,12 +38,12 @@ $uri = [System.Text.Encoding]::UTF8.GetString($bytes)
 foreach($fileName in $fileNames){
     $newUri = $uri.replace('<fileName>', $fileName)
     $newUri = $newUri.replace('<branch>', $branch)
-    Invoke-WebRequest -Uri $newUri -OutFile "scripts\TEMP-$fileName"
+    Invoke-WebRequest -Uri $newUri -OutFile "scripts\$fileName"
     
     # compare new and old modules for differences
     # Get the hash of both files
-    $hash1 = Get-FileHash "scripts\TEMP-$fileName" -Algorithm SHA256
-    $hash2 = Get-FileHash "temp\$fileName" -Algorithm SHA256
+    $hash1 = Get-FileHash "scripts\$fileName" -Algorithm SHA256
+    $hash2 = Get-Content -path "temp\$fileName"
     if ($hash1.Hash -ne $hash2.Hash) {
         Write-Host "New $($fileName) is different - Importing" -ForegroundColor Yellow
         Import-Module .\scripts\$fileName -Force -WarningAction Ignore
