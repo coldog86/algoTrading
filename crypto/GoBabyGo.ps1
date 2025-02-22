@@ -12,8 +12,7 @@ param(
 )
 
 Write-Host "Accessing branch: " -NoNewline; Write-Host "$($branch)" -ForegroundColor Green -BackgroundColor Black
-$Version = "0.2.$(git rev-list --count HEAD)"
-Write-Host "Version: $Version"
+# $Version = "0.2.$(git rev-list --count HEAD)"
 
 if($pullRepoOnly){
     Write-Host "Updating local files only" -ForegroundColor Yellow
@@ -24,8 +23,20 @@ $uri = [System.Text.Encoding]::UTF8.GetString($bytes)
 foreach($fileName in $fileNames){
     $newUri = $uri.replace('<fileName>', $fileName)
     $newUri = $newUri.replace('<branch>', $branch)
-    Invoke-WebRequest -Uri $newUri -OutFile "scripts\$fileName"
-    Import-Module .\scripts\$fileName -Force -WarningAction Ignore
+    Invoke-WebRequest -Uri $newUri -OutFile "scripts\TEMP-$fileName"
+    
+    # compare new and old modules for differences
+    # Get the hash of both files
+    $hash1 = Get-FileHash "scripts\TEMP-$fileName" -Algorithm SHA256
+    $hash2 = Get-FileHash "temp\$fileName" -Algorithm SHA256
+    if ($hash1.Hash -ne $hash2.Hash) {
+        Write-Host "New $($fileName) is different - Importing" -ForegroundColor Yellow
+        Import-Module .\scripts\$fileName -Force -WarningAction Ignore
+        $hash = Get-FileHash "scripts\$fileName" -Algorithm SHA256 
+        $hash > "temp\$fileName"
+    } else {
+        Write-Host "New $($fileName) is identical to existing module" -ForegroundColor Green
+    }
     Remove-Item -Path .\scripts\$fileName
 }
 
