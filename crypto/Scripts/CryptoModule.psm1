@@ -285,15 +285,15 @@ function Set-Configuration(){
 
     $configContent = Get-Content -Path $filePath -Raw
 
-    # Check if offset exists using regex
-    if ($configContent -match "(?m)^\s*$($configName):\s*\d+") { 
-        # Replace existing offset
+    # Check if config exists using regex (supporting decimals)
+    if ($configContent -match "(?m)^\s*$($configName):\s*[\d\.]+") { 
+        # Replace config value
         if(!$silent){
-           Write-Host "Updating ($($configName))"
+        Write-Host "Updating ($($configName))"
         }
-        $configContent = $configContent -replace "(?m)^\s*$($configName):\s*\d+", "$($configName): $configValue"
+        $configContent = $configContent -replace "(?m)^\s*$($configName):\s*[\d\.]+", "$($configName): $configValue"
     } else {
-        # Append offset with a new line
+        # Append config value with a new line
         if(!$silent){
             Write-Host "Appending $($configName)"
         }
@@ -423,24 +423,26 @@ function Get-WalletSecret {
 function Set-VersionNumber {
     param (
         [Parameter(Mandatory = $true)][string] $VersionNumber,
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
     
-    Set-Configuration -ConfigName VersionNumber -ConfigValue $versionNumber
+    Set-Configuration -ConfigName VersionNumber -ConfigValue $versionNumber -Silent $silent
 }
 
 
 function Set-TelegramToken {
     param (
         [Parameter(Mandatory = $false)][string] $TelegramToken = '7529656216:AAFliY-icP_51zmhKAscBoPOAwz88xo0HPA',
-        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt"
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
 
     # Convert to Base64
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($telegramToken)
     $encodedSecret = [Convert]::ToBase64String($bytes)
     
-    Set-Configuration -ConfigName TelegramToken -ConfigValue $encodedSecret
+    Set-Configuration -ConfigName TelegramToken -ConfigValue $encodedSecret -Silent $silent
 }
 
 function Get-TelegramToken {

@@ -13,8 +13,8 @@ param(
 
 Write-Host "Accessing branch: " -NoNewline; Write-Host "$($branch)" -ForegroundColor Green -BackgroundColor Black
 Set-VersionNumber -VersionNumber '0.2.1.1'
-$versionNumber = Get-VersionNumber
-Write-Host "Version: $($versionNumber)" -ForegroundColor Green -BackgroundColor Black
+$versionNumber = Get-VersionNumber -Silent $true
+Write-Host "Version: " -NoNewline; Write-Host "$($versionNumber)" -ForegroundColor Green -BackgroundColor Black
 
 if($pullRepoOnly){
     Write-Host "Updating local files only" -ForegroundColor Yellow
