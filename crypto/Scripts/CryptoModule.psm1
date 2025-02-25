@@ -28,14 +28,7 @@ function Log-Price(){
         "timestamp,price,token name" >> $logFolder\$tokenName.csv
     } 
     #$tokenSupply = Get-TokenSupply
-    $time = Get-Date -Format "HH:mm:ss"    
-    $date = Get-Date -Format "yyyy-MM-dd"
     $timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "date = $($date)"
-    Write-Host "time = $($time)"
-    Write-Host "timeStamp = $($timeStamp)"
-    Write-Host "tokenPrice = $($tokenPrice)"
-    Write-Host "tokenName = $($tokenName)"
     "$timeStamp,$tokenPrice,$tokenName" > $logFolder\$tokenName.csv
 }
 
