@@ -29,7 +29,7 @@ function Log-Price(){
     } 
     #$tokenSupply = Get-TokenSupply
     $timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$timeStamp,$tokenPrice,$tokenName" > $logFolder\$tokenName.csv
+    "$timeStamp,$tokenPrice,$tokenName" >> $logFolder\$tokenName.csv
 }
 
 
