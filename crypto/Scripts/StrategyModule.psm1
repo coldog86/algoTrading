@@ -48,14 +48,22 @@ function Run-BolleringBandStrategy {
                 $earliestRecord = ($filteredData | Sort-Object DateTime | Select-Object -First 1).DateTime
             }
             
+            $latestRecord = ($filteredData | Sort-Object DateTime | Select-Object -Last 1).DateTime
+
             Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green
             $filteredData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
-            $tokenName = $tokenName -replace '[^a-zA-Z0-9_-]', ''  # Remove invalid filename characters
+            
+            $filteredData
+            
+            
+            
             $firstTimestamp = $earliestRecord.ToString("yyyyMMdd_HHmmss")
             $lastTimestamp = $latestRecord.ToString("yyyyMMdd_HHmmss")
             $csvFileName = "$tokenName-$firstTimestamp-$lastTimestamp.csv"
             $csvFilePath = "logFolder\temp\$csvFileName"
             
+            Write-Host "csv = $($csvFilePath)"
+
             $filteredData | Export-Csv -Path $csvFilePath -NoTypeInformation
 
             Write-Host "New data saved to: $csvFilePath" -ForegroundColor Cyan
