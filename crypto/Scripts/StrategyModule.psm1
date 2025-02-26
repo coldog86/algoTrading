@@ -44,6 +44,7 @@ function Run-BolleringBandStrategy {
                 # Not enough data yet, wait and retry
                 Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting..." -ForegroundColor Yellow
                 Start-Sleep -Seconds 30  
+                Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token
             }
             
             Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green

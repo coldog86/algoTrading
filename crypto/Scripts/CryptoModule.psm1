@@ -852,6 +852,7 @@ function Run-StrategyToDecideExit(){
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
 
+    Write-Host "[location] Run-StrategyToDecideExit"
     if($strategy -eq 'StopLoss'){
         $buyTime = Get-Date
         $buyPrice = Get-BuyPrice
@@ -874,7 +875,7 @@ function Run-StrategyToDecideEntry(){
         [Parameter(Mandatory = $false)] $StartIncriment = 0,
         [Parameter(Mandatory = $false)][bool] $CollectDataOnly
     )
-
+    Write-Host "[location] Run-StrategyToDecideEntry"
     Write-Host "Initial Price = $($initialPrice)" -ForegroundColor Yellow
     Write-Host "Waiting for $($waitTime) seconds"
     
