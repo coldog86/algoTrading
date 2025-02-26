@@ -49,7 +49,7 @@ function Run-BolleringBandStrategy {
             }
             
             Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green
-            
+            $filteredData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
             $tokenName = $tokenName -replace '[^a-zA-Z0-9_-]', ''  # Remove invalid filename characters
             $firstTimestamp = $earliestRecord.ToString("yyyyMMdd_HHmmss")
             $lastTimestamp = $latestRecord.ToString("yyyyMMdd_HHmmss")
