@@ -22,7 +22,7 @@ if($pullRepoOnly){
 
 # Remove module if present
 foreach ($fileName in $fileNames){
-    $moduleName = $filename.replace('.csv','')
+    $moduleName = $filename.replace('.psm1','')
     $loadedModule = Get-Module -Name $moduleName
 
     if ($loadedModule) {
