@@ -53,19 +53,13 @@ function Run-BolleringBandStrategy {
             Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green
             $filteredData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
             
-            $filteredData
-            
-            
-            
             $firstTimestamp = $earliestRecord.ToString("yyyyMMdd_HHmmss")
             $lastTimestamp = $latestRecord.ToString("yyyyMMdd_HHmmss")
             $csvFileName = "$tokenName-$firstTimestamp-$lastTimestamp.csv"
-            $csvFilePath = "logFolder\temp\$csvFileName"
+            $csvFilePath = "$logFolder\temp\$csvFileName"
             
             Write-Host "csv = $($csvFilePath)"
-
             $filteredData | Export-Csv -Path $csvFilePath -NoTypeInformation
-
             Write-Host "New data saved to: $csvFilePath" -ForegroundColor Cyan
         
             # Calculate best Bollinger Bands paramaters
