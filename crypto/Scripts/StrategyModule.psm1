@@ -45,6 +45,9 @@ function Run-BolleringBandStrategy {
                 Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting..." -ForegroundColor Yellow
                 Start-Sleep -Seconds 30  
                 Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token
+                # Filter last 10 minutes of data
+                $currentTime = Get-Date
+                $filteredData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
                 $earliestRecord = ($filteredData | Sort-Object DateTime | Select-Object -First 1).DateTime
             }
             
