@@ -121,6 +121,118 @@ function Calculate-BollingerBands {
 }
 
 
+function Test-BollingerBands {
+    param (        
+        [Parameter(Mandatory = $true)][string] $CsvFile,
+        [Parameter(Mandatory = $false)][int] $InitialBalance = 100,
+        [Parameter(Mandatory = $false)][int] $TradeAmount = 10,
+        [Parameter(Mandatory = $false)][float] $slippage = 0.05,
+        [Parameter(Mandatory = $true)][int] $RollingWindow = 20,
+        [Parameter(Mandatory = $true)][float] $StdMultiplier = 2,
+        [Parameter(Mandatory = $false)][switch] $ShowTradeLog,
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
+    )
+
+    
+    $a = $CsvFile.Split('\')
+    $csvFileName = $a[$a.count-1]    
+    $csvFileName = $csvFileName.Split('.')[0]
+
+    Fix-CSV -CsvFile $csvFile -Silent $true
+    
+    # Load price data
+    $data = Import-Csv -Path $csvFile -Delimiter ',' | Select-Object -Property timestamp, price
+    
+    # Convert Price column to float
+    $data | ForEach-Object { $_.Price = [double]$_.Price }
+
+    # Compute Moving Average and Standard Deviation for Bollinger Bands
+    $data = @($data)  # Ensure $data is treated as an array
+    for ($i = $rollingWindow; $i -lt $data.Length; $i++) {
+        $subset = $data[($i - $rollingWindow)..$i]
+        $mean = ($subset.Price | Measure-Object -Average).Average
+        $stdDev = [math]::Sqrt(($subset.Price | ForEach-Object { ($_ - $mean) * ($_ - $mean) } | Measure-Object -Sum).Sum / $rollingWindow)
+        $data[$i] | Add-Member -MemberType NoteProperty -Name MovingAvg -Value $mean
+        $data[$i] | Add-Member -MemberType NoteProperty -Name UpperBand -Value ($mean + ($stdMultiplier * $stdDev))
+        $data[$i] | Add-Member -MemberType NoteProperty -Name LowerBand -Value ($mean - ($stdMultiplier * $stdDev))
+    }
+
+    # Initialize variables for backtest
+    $balance = $initialBalance
+    $position = 0
+    $tradeLog = @()
+    $roiList = @()
+
+    # Backtest strategy
+    for ($i = $rollingWindow; $i -lt $data.Count; $i++) {
+        $currentPrice = $data[$i].Price
+        $lowerBand = $data[$i].LowerBand
+        $upperBand = $data[$i].UpperBand
+
+        # Buy condition: Price crosses above the lower Bollinger Band and we do not already hold a position
+        if ($currentPrice -lt $lowerBand -and $position -eq 0) {
+            $tokensBought = ($tradeAmount * (1 - $slippage)) / $currentPrice
+            $position = $tokensBought
+            $balance -= $tradeAmount
+            $tradeLog += "Buy @ $($currentPrice) | Tokens: $([math]::Round($tokensBought,6)) | Balance: $([math]::Round($balance,2))"
+        }
+
+        # Sell condition: Price crosses below the upper Bollinger Band
+        elseif ($currentPrice -gt $upperBand -and $position -gt 0) {
+            $sellValue = $position * $currentPrice * (1 - $slippage)
+            $profit = $sellValue - $tradeAmount
+            $roi = ($profit / $tradeAmount) * 100
+            $roiList += $roi
+            $balance += $sellValue
+            $tradeLog += "Sell @ $($currentPrice) | Tokens: $([math]::Round($position,6)) | Balance: $([math]::Round($balance,2)) | ROI: $([math]::Round($roi,3))%"
+            $position = 0
+        }
+    }
+
+    # Calculate total ROI
+    $totalROI = (($balance - $initialBalance) / $initialBalance) * 100
+    $sumROI = ($roiList | Measure-Object -Sum).Sum
+
+    if(!$silent){
+
+        # Display trade log
+        if($showTradeLog){
+            Write-Host "`n--- Trade Log ---" -ForegroundColor Cyan -BackgroundColor Black
+            $tradeLog | ForEach-Object { Write-Host $_ }
+        }
+
+        # Display results
+        Write-Host "--- $($CsvFileName) - Bollinger Bands: Backtest Results ---" -ForegroundColor Magenta -BackgroundColor Black
+        Write-Host "Slippage = $($slippage)" -ForegroundColor Cyan 
+        Write-Host "Rolling window = $($rollingWindow)" -ForegroundColor Cyan 
+        Write-Host "Standard deviation multiplier = $($stdMultiplier)" -ForegroundColor Cyan 
+
+        Write-Host "Total Trades: $($tradeLog.Count)"
+        if($balance -lt 100){
+            Write-Host "Final Balance: $([math]::Round($balance,2))" -ForegroundColor Red
+        }
+        else {
+            Write-Host "Final Balance: $([math]::Round($balance,2))" -ForegroundColor Green
+        }
+        if($totalROI -lt 0){
+            Write-Host "Total ROI: $([math]::Round($totalROI,3))%" -ForegroundColor Red
+        }
+        else {
+            Write-Host "Total ROI: $([math]::Round($totalROI,3))%" -ForegroundColor Green
+        }
+    }
+    # Create and return the totalROI object
+    $totalROIobj = [PSCustomObject]@{
+        RollingWindow = $RollingWindow
+        StdMultiplier = $StdMultiplier
+        TotalROI = [math]::Round($totalROI, 3)
+        NumberOfTrades = $($tradeLog.Count)
+    }
+
+    return $totalROIobj
+
+}
+
 function Run-BollingerBandsGridSearch {
     param (                
         [Parameter(Mandatory = $true)][string] $CsvFile,
