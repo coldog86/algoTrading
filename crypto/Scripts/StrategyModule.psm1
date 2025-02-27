@@ -40,7 +40,7 @@ function Run-BolleringBandStrategy {
             $earliestRecord = ($filteredData | Sort-Object DateTime | Select-Object -First 1).DateTime
 
             # Check if the earliest record is actually 10 minutes old
-            while ($earliestRecord -gt $currentTime.AddMinutes(-2)) {
+            while ($earliestRecord -gt $currentTime.AddMinutes(-10)) {
                 # Not enough data yet, wait and retry
                 Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting..." -ForegroundColor Yellow
                 Start-Sleep -Seconds 30  
