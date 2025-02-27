@@ -121,6 +121,48 @@ function Calculate-BollingerBands {
 }
 
 
+function Fix-CSV {
+    param (                
+        [Parameter(Mandatory = $true)][string] $CsvFile,
+        [Parameter(Mandatory = $false)][bool] $Silent = $false
+    )
+        
+    $data = Get-Content -Path $csvFile
+
+    # Get rid of bad line
+    $data = $data | Where-Object { $_ -ne '#TYPE System.Management.Automation.PSCustomObject' }
+
+    
+    # Add headers to columns
+    $tempFile = "$csvFile.temp"
+    $expectedHeader = "timestamp,price,token name"
+    $expectedHeader2 = '"timestamp","price","token name"'
+    # Read the first line of the CSV
+    $firstLine = Get-Content -Path $csvFile -TotalCount 1
+    # If the header is incorrect, prepend the correct header
+    if ($firstLine -ne $expectedHeader ){
+        if( $firstLine -ne $expectedHeader2 ) {        
+            if(!$silent){
+                Write-Host "Fixing CSV: Adding missing header..."
+            }
+            $newContent = @($expectedHeader) + (Get-Content -Path $csvFile)
+            $newContent | Set-Content -Path $tempFile
+            Copy-Item -Path $tempFile -Destination $csvFile -Force
+            Remove-Item -Path $tempFile 
+        }
+    } 
+
+    
+    # Fix timestamps in CSV
+    $data = $data -replace '/', '-'
+    $data = $data -replace '"', ''
+    $data = $data -replace '(\d{2}-\d{2}),', '$1 '
+    $data = $data -replace '(-2025),', '$1 '
+    $data | Set-Content -Path $csvFile
+
+    return $data
+
+}
 function Test-BollingerBands {
     param (        
         [Parameter(Mandatory = $true)][string] $CsvFile,
