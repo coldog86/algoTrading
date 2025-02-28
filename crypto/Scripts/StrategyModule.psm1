@@ -42,8 +42,8 @@ function Run-BolleringBandStrategy {
             # Check if the earliest record is actually 10 minutes old
             while ($earliestRecord -gt $currentTime.AddMinutes(-10)) {
                 # Not enough data yet, wait and retry
-                $i++
-                Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting...($i/20)" -ForegroundColor Yellow
+                $n++
+                Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting...($n/20)" -ForegroundColor Yellow
                 Start-Sleep -Seconds 30  
                 Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token
                 # Filter last 10 minutes of data
@@ -79,7 +79,10 @@ function Run-BolleringBandStrategy {
         $result = Calculate-BollingerBands -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         
         if ($currentPrice -lt $result.LowerBand) {
+            if()
             Write-Host "**** BUY ****" -ForegroundColor Green -BackgroundColor Black
+            Set-Buytime
+            Set-BuyPrice -BuyPrice $currentPrice
             #return "BUY"
         }
         elseif ($currentPrice -gt $result.UpperBand) {

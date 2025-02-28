@@ -904,22 +904,32 @@ function Set-BuyPrice(){
     (
         [Parameter(Mandatory = $true)] $BuyPrice
     )
-
-        $global:buyPrice = $buyPrice
+    $global:buyPrice = $buyPrice
 }
-
 function Get-BuyPrice(){
-    write-host "buy price = $($buyPrice)"
+    write-host "buy price = $($global:buyPrice)"
     return $global:buyPrice
 
 }
+function Set-BuyTime(){
+    Param
+    (
+        [Parameter(Mandatory = $true)] $BuyTime
+    )  
+    $global:buyTime = Get-Date
+}
+
+function Get-Buytime(){
+    write-host "buy time = $($global:buyTime)"
+    return $global:buyTime
+}
+
 
 function Set-TokenCode(){
     Param
     (
         [Parameter(Mandatory = $true)] $TokenCode
     )
-
     $global:tokenCode = $tokenCode
 }
 
