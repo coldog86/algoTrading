@@ -94,13 +94,13 @@ function Set-WalletAddress(){
     
     $configContent = Get-Content -Path $filePath -Raw
 
-    # Check if walletSecret is present
+    # Check if walletAddress is present
     if ($configContent -like "walletAddress:*") { 
-        # Replace existing walletSecret
+        # Replace existing walletAddress
         $configContent = $configContent -replace "^walletAddress: .+", "walletAddress: $walletAddress"
     } else {
-        # Append walletSecret if not found
-        $configContent += "`nwalletAddress: $walletAddress"
+        # Append walletAddress if not found
+        "walletAddress: $walletAddress" >> $filePath
     }
 }
 
@@ -161,7 +161,7 @@ function Set-UserTelegramGroup(){
         $configContent = $configContent -replace "^userTelegramGroup: .+", "userTelegramGroup: $userTelegramGroup"
     } else {
         # Append walletSecret if not found
-        $configContent += "`nuserTelegramGroup: $userTelegramGroup"
+        "userTelegramGroup: $userTelegramGroup" >> $filePath
     }
 }
 
@@ -201,7 +201,7 @@ function Set-AdminTelegramGroup(){
         $configContent = $configContent -replace "^adminTelegramGroup: .+", "adminTelegramGroup: $adminTelegramGroup"
     } else {
         # Append walletSecret if not found
-        $configContent += "`nadminTelegramGroup: $adminTelegramGroup"
+        "adminTelegramGroup: $adminTelegramGroup" >> $filePath
     }
 }
 
@@ -243,7 +243,7 @@ function Set-StandardBuy(){
         $configContent = $configContent -replace "^standardBuy: .+", "standardBuy: $standardBuy"
     } else {
         # Append walletSecret if not found
-        $configContent += "`nstandardBuy: $standardBuy"
+        "standardBuy: $standardBuy" >> $filePath
     }
 }
 
@@ -291,11 +291,40 @@ function Set-Configuration(){
         if(!$silent){
             Write-Host "Appending $($configName)"
         }
-        $configContent += "`n$($configName): $configValue"
+        "$($configName): $configValue" >> $filePath
     }
     # Save config
     Set-Content -Path $filePath -Value $configContent
 }
+
+
+function Set-DevBalance(){
+    param (
+        [Parameter(Mandatory = $true)][string] $Balance,
+        [Parameter(Mandatory = $false)][string] $FilePath = "./config/config.txt",
+        [Parameter(Mandatory = $true)][bool] $Silent = $false
+    )
+
+    $configContent = Get-Content -Path $filePath -Raw
+
+    # Check if devbalance exists using regex
+    if ($configContent -match "(?m)^\s*devBalance:\s*\d+") { 
+        # Replace existing devbalance
+        if(!$silent){
+           Write-Host "Updating dev balance"
+        }
+        $configContent = $configContent -replace "(?m)^\s*devBalance:\s*\d+", "devBalance: $balance"
+    } else {
+        # Append offset with a new line
+        if(!$silent){
+            Write-Host "Appending devBalance"
+        }
+        "devBalance: $balance" >> $filePath
+    }
+    # Save config
+    Set-Content -Path $filePath -Value $configContent
+}
+
 function Set-Offset(){
     param (
         [Parameter(Mandatory = $true)][string] $Offset,
@@ -317,7 +346,7 @@ function Set-Offset(){
         if(!$silent){
             Write-Host "Appending offset"
         }
-        $configContent += "`noffset: $offset"
+        "offset: $offset" >> $filePath
     }
     # Save config
     Set-Content -Path $filePath -Value $configContent
@@ -375,7 +404,7 @@ function Set-WalletSecret {
         $configContent = $configContent -replace "^walletSecret: .+", "walletSecret: $encodedSecret"
     } else {
         # Append walletSecret if not found
-        $configContent += "`nwalletSecret: $encodedSecret"
+        "walletSecret: $encodedSecret" >> $filePath
     }
 
     # Save the updated content back to the file
@@ -1288,15 +1317,15 @@ function Create-TrustLine(){
 
 
 function Buy-Token(){
-    Param
-        (
+    param (
             [Parameter(Mandatory = $true)] $XrpAmount, 
             [Parameter(Mandatory = $false)][string] $TokenCode,
             [Parameter(Mandatory = $true)][string] $TokenIssuer,            
             [Parameter(Mandatory = $false)] $Slipage = 0.05, # default 5% slip
             [Parameter(Mandatory = $false)][string] $Message,
             [Parameter(Mandatory = $false)][string] $TelegramToken = '7529656216:AAFliY-icP_51zmhKAscBoPOAwz88xo0HPA',            
-            [Parameter(Mandatory = $false)][int] $Repeat = 3
+            [Parameter(Mandatory = $false)][int] $Repeat = 3,
+            [Parameter(Mandatory = $false)][bool] $SimulationOnly = $false
         ) 
     
     $tokenName = Get-TokenName
@@ -1322,6 +1351,7 @@ function Buy-Token(){
         $buyPrice = $result.split('=')[1]
         Write-Host "********* Buy price = $($buyPrice)" -ForegroundColor Gray
         Set-BuyPrice -BuyPrice $currentPrice
+        Set-Buytime
         Send-TelegramMessage -ChatId "@ForwardingAlert" -Message "New buy! - $($tokenName) $($message)" -TelegramToken $telegramToken
     } 
     elseif($result -like "*Not synced to the network*"){
@@ -1345,8 +1375,7 @@ function Buy-Token(){
 }
 
 function Sell-Token(){
-    Param
-        (
+    param (
             [Parameter(Mandatory = $true)][string] $TokenIssuer,
             [Parameter(Mandatory = $true)][string] $TokenCode,
             [Parameter(Mandatory = $true)] $AmountOfTokenToSell, # As a percentage
@@ -1357,7 +1386,8 @@ function Sell-Token(){
             [Parameter(Mandatory = $false)][switch] $NoMessage,
             [Parameter(Mandatory = $false)][string] $TelegramToken = '7529656216:AAFliY-icP_51zmhKAscBoPOAwz88xo0HPA',
             [Parameter(Mandatory = $false)][int] $SafetyCount = 0,
-            [Parameter(Mandatory = $false)][switch] $ContinueOnPriceFall
+            [Parameter(Mandatory = $false)][switch] $ContinueOnPriceFall,
+            [Parameter(Mandatory = $false)][bool] $SimulationOnly = $false
         ) 
 
     $safetyCount++

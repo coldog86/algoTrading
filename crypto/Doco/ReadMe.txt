@@ -14,7 +14,7 @@ To achieve this we want to use a diverse group of testers each developing their 
 2b. Add the bot ragstoriches2 to the chat
 
 [ SETUP ]
-1. Go to here: https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/main/crypto/initiate.ps1
+1. Go to here: https://raw.githubusercontent.com/coldog86/algoTrading/refs/heads/main/crypto/initiate.ps1 ## NOTE this needs to be updated
 2. Copy all the code
 3. Open PowerShell (start > PowerShell) 
 4. Paste code, hit enter

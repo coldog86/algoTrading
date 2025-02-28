@@ -18,9 +18,11 @@ function Run-BolleringBandStrategy {
         
         if($i -eq 5){
             $i++
+            # init stuff for strategy
         }
         # Every minute do this...
         if($i % 6 -eq 0){
+            Write-Host "Getting 10mins of data" -ForegroundColor Yellow -BackgroundColor Black
             # get the live CSV data for the token
             $csvData = Import-Csv -Path "$logFolder\$tokenName.csv"
             if ($csvData.Count -eq 0) {
@@ -34,56 +36,55 @@ function Run-BolleringBandStrategy {
 
             # Filter last 10 minutes of data
             $currentTime = Get-Date
-            $filteredData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
-
-            # Check if we have 10 minutes of data
-            $earliestRecord = ($filteredData | Sort-Object DateTime | Select-Object -First 1).DateTime
+            $lastNminutesOfData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
+            $earliestRecord = ($lastNminutesOfData | Sort-Object DateTime | Select-Object -First 1).DateTime
 
             # Check if the earliest record is actually 10 minutes old
             while ($earliestRecord -gt $currentTime.AddMinutes(-10)) {
-                # Not enough data yet, wait and retry
+                # Don't have 10mins of data yet, wait 30 seconds and retry. Easy loop, the earliest record never changes
                 $n++
                 Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting...($n/20)" -ForegroundColor Yellow
                 Start-Sleep -Seconds 30  
-                Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token
-                # Filter last 10 minutes of data
-                $currentTime = Get-Date
-                $filteredData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
-                $earliestRecord = ($filteredData | Sort-Object DateTime | Select-Object -First 1).DateTime                                
+                Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log while we're waiting                                              
             }
+
+            ## TODO 
+            # add loop to check newestRecord is > $currentTime.AddMinutes(-1)
             
-            $latestRecord = ($filteredData | Sort-Object DateTime | Select-Object -Last 1).DateTime
+            $latestRecord = ($lastNminutesOfData | Sort-Object DateTime | Select-Object -Last 1).DateTime
 
             Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green
-            $filteredData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
-            
+            # Get the data again to ensure we have latest full 10mins
+            $csvData = $csvData | ForEach-Object { $_ | Add-Member -PassThru -MemberType NoteProperty -Name DateTime -Value ([datetime]$_.Timestamp) } # Convert timestamp to DateTime
+            $lastNminutesOfData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
+
+            # shit to name the temp file
             $firstTimestamp = $earliestRecord.ToString("yyyyMMdd_HHmmss")
             $lastTimestamp = $latestRecord.ToString("yyyyMMdd_HHmmss")
             $csvFileName = "$tokenName-$firstTimestamp-$lastTimestamp.csv"
-            $csvFilePath = "$logFolder\temp\$csvFileName"
-            
-            Write-Host "csv = $($csvFilePath)"
-            $filteredData | Export-Csv -Path $csvFilePath -NoTypeInformation
-            Write-Host "New data saved to: $csvFilePath" -ForegroundColor Cyan
+            $tempCsvFilePath = "$logFolder\temp\$csvFileName"
+            Write-Host "csv file path = $($tempCsvFilePath)"
+            $lastNminutesOfData | Export-Csv -Path $tempCsvFilePath -NoTypeInformation
+            Write-Host "New data saved to: $tempCsvFilePath" -ForegroundColor Cyan
         
             # Calculate best Bollinger Bands paramaters
-            $gridResults = Run-BollingerBandsGridSearch -CsvFile $csvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05
+            $gridResults = Run-BollingerBandsGridSearch -CsvFile $tempCsvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05
             $gridResults = $gridResults | Sort-Object -Descending TotalROI
             $bollingerBandParameters = $gridResults[0]
         }
 
         # Extract price data
-        $csvData = Import-Csv -Path $csvFilePath
+        $csvData = Import-Csv -Path $tempCsvFilePath
         $priceData = $csvData.Price | ForEach-Object { [double]$_ }
-        $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
-        $result = Calculate-BollingerBands -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
+
+        # Run the actual strategy on our temp data with the parameters we calculated from the grid search
+        $result = Calculate-BollingerBandsParameters -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         
+        $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
         if ($currentPrice -lt $result.LowerBand) {
             if( Has-nMinutesPassed -InitialTime $global:buyTime -MinutesPassed 1 ){
                 Write-Host "**** BUY ****" -ForegroundColor Green -BackgroundColor Black
-                Set-Buytime
-                Set-BuyPrice -BuyPrice $currentPrice
-                #return "BUY"
+                #return "BUY"                
             }
             else {
                 Write-Host "**** BUY conditions meet, too soon to last buy ****" -ForegroundColor Green 
@@ -107,7 +108,8 @@ function Run-BolleringBandStrategy {
     }
 }
 
-function Calculate-BollingerBands {
+
+function Calculate-BollingerBandsParameters {
     param (
         [Parameter(Mandatory = $true)][array] $PriceData,
         [Parameter(Mandatory = $true)][int] $RollingWindow,
