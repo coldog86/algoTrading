@@ -43,8 +43,8 @@ function Run-BolleringBandStrategy {
             while ($earliestRecord -gt $currentTime.AddMinutes(-10)) {
                 # Don't have 10mins of data yet, wait 30 seconds and retry. Easy loop, the earliest record never changes
                 $n++
-                Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting...($n/20)" -ForegroundColor Yellow
-                Start-Sleep -Seconds 30  
+                Write-Host "Not enough data (waiting for 10 minutes of coverage). Waiting...($(n))" -ForegroundColor Yellow
+                Start-Sleep -Seconds 6  
                 Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log while we're waiting                                              
             }
 
