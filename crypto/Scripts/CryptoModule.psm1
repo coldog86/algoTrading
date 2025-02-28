@@ -912,10 +912,6 @@ function Get-BuyPrice(){
 
 }
 function Set-BuyTime(){
-    Param
-    (
-        [Parameter(Mandatory = $true)] $BuyTime
-    )  
     $global:buyTime = Get-Date
 }
 
@@ -999,10 +995,19 @@ function ExitShell(){
     Stop-Process -Id $PID -Force
 }
 
+function Has-nMinutesPassed {
+    param (
+        [Parameter(Mandatory = $true)][datetime] $InitialTime,
+        [Parameter(Mandatory = $false)][int] $MinutesPassed = 10
+    )
+    
+    $elapsed = (New-TimeSpan -Start $initialTime -End (Get-Date)).TotalMinutes
+    return $elapsed -ge $minutesPassed
+}
+
 
 function Test-TokenCode(){
-    Param
-    (
+    param (
         [Parameter(Mandatory = $true)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenName,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
@@ -1048,8 +1053,7 @@ function Test-TokenCode(){
 
 
 function Get-TokenPrice(){
-    Param
-    (
+    param (
         [Parameter(Mandatory = $false)][string] $TokenCode,
         [Parameter(Mandatory = $true)][string] $TokenIssuer,
         [Parameter(Mandatory = $false)][bool] $Silent = $false 
@@ -1105,8 +1109,7 @@ function Get-TokenPrice(){
 }
 
 function Get-TokenCodeFromName(){
-    Param
-        (
+    param (
             [Parameter(Mandatory = $true)][string] $TokenName
         )
     # Converts string to Hexadecimal & pad to 160-Bit (40 characters)

@@ -79,11 +79,15 @@ function Run-BolleringBandStrategy {
         $result = Calculate-BollingerBands -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         
         if ($currentPrice -lt $result.LowerBand) {
-            if()
-            Write-Host "**** BUY ****" -ForegroundColor Green -BackgroundColor Black
-            Set-Buytime
-            Set-BuyPrice -BuyPrice $currentPrice
-            #return "BUY"
+            if( Has-nMinutesPassed -InitialTime $global:buyTime -MinutesPassed 1 ){
+                Write-Host "**** BUY ****" -ForegroundColor Green -BackgroundColor Black
+                Set-Buytime
+                Set-BuyPrice -BuyPrice $currentPrice
+                #return "BUY"
+            }
+            else {
+                Write-Host "**** BUY conditions meet, too soon to last buy ****" -ForegroundColor Green 
+            }
         }
         elseif ($currentPrice -gt $result.UpperBand) {
             Write-Host "**** SELL ****" -ForegroundColor Green -BackgroundColor Black
