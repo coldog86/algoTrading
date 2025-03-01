@@ -55,3 +55,18 @@ To achieve this we want to use a diverse group of testers each developing their 
 	The bot is using a paid API which improves stability dramatically however since development has begun Telegram has had two outages so I would say it is a common problem.
 	The status of Telegram can be checked here: https://downdetector.com.au/status/telegram/
 	Downed APIs are not a solvable problem, if Telegram is down, just wait it out. 
+
+
+[ STRATEGIES ]
+	[ BOLLINGER BANDS ]
+	A Bollinger Bands strategy works by evaluating three trend lines:
+	 - Middle Band – A simple moving average (SMA), usually 20-period.
+	 - Upper Band – The SMA plus a number of standard deviations, usually 2.
+	 - Lower Band – The SMA minus a number of standard deviations, usually 2.
+
+		[ WHAT IS STNADARD DEVIATION ]
+		Standard deviation is a measure of how much data points (like prices) deviate from the average (mean). In trading, it tells us how volatile a market is.
+
+		How it works in Bollinger Bands:
+		A high standard deviation means prices fluctuate a lot → Wider Bands (high volatility).
+		A low standard deviation means prices are stable → Narrow Bands (low volatility).Standard deviation is a measure of how much data points (like prices) deviate from the average (mean). In trading, it tells us how volatile a market is.
