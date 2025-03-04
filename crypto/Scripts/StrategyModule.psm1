@@ -85,7 +85,7 @@ function Run-BolleringBandStrategy {
         $result = Calculate-BollingerBandsParameters -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         
         $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Silent $true
-        Write-Host "$(Get-Date -Format 'HH:mm:ss') | $($tokenName) | Price: $currentPrice | Decision: $decision" -ForegroundColor Cyan -NoNewline
+        Write-Host "$(Get-Date -Format 'HH:mm:ss') | $($tokenName) | Price: $currentPrice | Low: $($result.LowerBand) | High: $($result.UpperBand) | Decision: $decision" -ForegroundColor Cyan -NoNewline
         if ($currentPrice -lt $result.LowerBand) {
             Write-Host "BUY BUY BUY"
             if(!($null -eq $global:buyTime)){
