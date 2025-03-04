@@ -13,7 +13,7 @@ function Run-BolleringBandStrategy {
     $tokenIssuer = Get-TokenIssuer
     Write-Host "Starting live trading with Bollering Band strategy..." -ForegroundColor Green
     while ($true) {
-        $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+        $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Silent $true
         Log-Price -TokenName $tokenName -TokenPrice $currentPrice # log all the price data for a token 
         
         if($i -eq 5){
@@ -83,7 +83,7 @@ function Run-BolleringBandStrategy {
         # Run the actual strategy on our temp data with the parameters we calculated from the grid search
         $result = Calculate-BollingerBandsParameters -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         
-        $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer
+        $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Silent $true
         if ($currentPrice -lt $result.LowerBand) {
             if( Has-nMinutesPassed -InitialTime $global:buyTime -MinutesPassed 1 ){
                 Write-Host "**** BUY ****" -ForegroundColor Green -BackgroundColor Black
