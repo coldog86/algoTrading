@@ -1088,7 +1088,9 @@ function Get-TokenPrice(){
         [Parameter(Mandatory = $false)][bool] $Silent = $false 
     )
     
-    Write-Host "getting price " -NoNewline     
+    if(!$silent){
+        Write-Host "getting price " -NoNewline     
+    }
     $tokenName = Get-TokenName
     
     $payload = @{

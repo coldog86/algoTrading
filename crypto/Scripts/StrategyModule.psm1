@@ -84,26 +84,24 @@ function Run-BolleringBandStrategy {
         $result = Calculate-BollingerBandsParameters -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         
         $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Silent $true
+        Write-Host "$(Get-Date -Format 'HH:mm:ss') | Price: $currentPrice | Decision: $decision" -ForegroundColor Cyan -NoNewline
         if ($currentPrice -lt $result.LowerBand) {
             if( Has-nMinutesPassed -InitialTime $global:buyTime -MinutesPassed 1 ){
                 Write-Host "**** BUY ****" -ForegroundColor Green -BackgroundColor Black
                 #return "BUY"                
             }
             else {
-                Write-Host "**** BUY conditions meet, too soon to last buy ****" -ForegroundColor Green 
+                Write-Host "BUY conditions met. Too soon to last buy" -ForegroundColor Yellow
             }
         }
         elseif ($currentPrice -gt $result.UpperBand) {
-            Write-Host "**** SELL ****" -ForegroundColor Green -BackgroundColor Black
+            Write-Host "SELL" -ForegroundColor Red -BackgroundColor Black
             #return "SELL"
         }
         else {
-            Write-Host "**** HOLD ****"
+            Write-Host "HOLD" -ForegroundColor Yellow -BackgroundColor Black
             #return "HOLD"
         }
-
-        # Log trade decision
-        Write-Host "$(Get-Date -Format 'HH:mm:ss') | Price: $currentPrice | Decision: $decision" -ForegroundColor Cyan
 
         # Wait for 10 seconds before next check
         $i++
