@@ -70,7 +70,7 @@ function Run-BolleringBandStrategy {
             Write-Host "New data saved to: $tempCsvFilePath" -ForegroundColor Cyan
         
             # Calculate best Bollinger Bands paramaters
-            $gridResults = Run-BollingerBandsGridSearch -CsvFile $tempCsvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05
+            $gridResults = Run-BollingerBandsGridSearch -CsvFile $tempCsvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05 -Silent $true
             $gridResults = $gridResults | Sort-Object -Descending TotalROI
             $bollingerBandParameters = $gridResults[0]
         }
@@ -255,24 +255,24 @@ function Test-BollingerBands {
             $tradeLog | ForEach-Object { Write-Host $_ }
         }
 
-        # Display results
-        Write-Host "--- $($CsvFileName) - Bollinger Bands: Backtest Results ---" -ForegroundColor Magenta -BackgroundColor Black
-        Write-Host "Slippage = $($slippage)" -ForegroundColor Cyan 
-        Write-Host "Rolling window = $($rollingWindow)" -ForegroundColor Cyan 
-        Write-Host "Standard deviation multiplier = $($stdMultiplier)" -ForegroundColor Cyan 
-
-        Write-Host "Total Trades: $($tradeLog.Count)"
-        if($balance -lt 100){
-            Write-Host "Final Balance: $([math]::Round($balance,2))" -ForegroundColor Red
-        }
-        else {
-            Write-Host "Final Balance: $([math]::Round($balance,2))" -ForegroundColor Green
-        }
-        if($totalROI -lt 0){
-            Write-Host "Total ROI: $([math]::Round($totalROI,3))%" -ForegroundColor Red
-        }
-        else {
-            Write-Host "Total ROI: $([math]::Round($totalROI,3))%" -ForegroundColor Green
+        # Display resultsif($totalROI -lt 0){
+            if($totalROI -lt 0){
+                $color = 'Red'
+            }
+            if($totalROI -gt 0){
+                $color = 'Green'
+            }
+            if($tradeLog.Count -eq 0){
+                $color = 'Yellow'
+            }
+        Write-Host "--- $($CsvFileName) --- Window=$($rollingWindow)/SDmultiplier=$($stdMultiplier)   ---" -ForegroundColor $color -BackgroundColor Black
+        if(!($silent)){
+            Write-Host "Slippage = $($slippage)" -ForegroundColor Cyan 
+            Write-Host "Rolling window = $($rollingWindow)" -ForegroundColor Cyan 
+            Write-Host "Standard deviation multiplier = $($stdMultiplier)" -ForegroundColor Cyan 
+           
+            Write-Host "Total Trades: $($tradeLog.Count)" -ForegroundColor $color
+            Write-Host "Total ROI: $([math]::Round($totalROI,3))%" -ForegroundColor $color
         }
     }
     # Create and return the totalROI object
