@@ -74,7 +74,7 @@ function Run-BolleringBandStrategy {
             $gridResults = Run-BollingerBandsGridSearch -CsvFile $tempCsvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05 -Silent $true
             $gridResults = $gridResults | Sort-Object -Descending TotalROI
             $bollingerBandParameters = $gridResults[0]
-            Write-Host $bollingerBandParameters -ForegroundColor Magenta -BackgroundColor Black
+            Write-Host $bollingerBandParameters -ForegroundColor Magenta -BackgroundColor Black -NoNewline
         }
 
         # Extract price data
@@ -83,9 +83,10 @@ function Run-BolleringBandStrategy {
 
         # Run the actual strategy on our temp data with the parameters we calculated from the grid search
         $result = Calculate-BollingerBandsParameters -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
+        Write-Host " | Low: $($result.LowerBand) | High: $($result.UpperBand)" -ForegroundColor Magenta -BackgroundColor Black 
         
         $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Silent $true
-        Write-Host "$(Get-Date -Format 'HH:mm:ss') | $($tokenName) | Price: $currentPrice | Low: $($result.LowerBand) | High: $($result.UpperBand) | Decision: $decision" -ForegroundColor Cyan -NoNewline
+        Write-Host "$(Get-Date -Format 'HH:mm:ss') | $($tokenName) | Price: $currentPrice | Decision: $decision" -ForegroundColor Cyan -NoNewline
         if ($currentPrice -lt $result.LowerBand) {
             Write-Host "BUY BUY BUY"
             if(!($null -eq $global:buyTime)){
