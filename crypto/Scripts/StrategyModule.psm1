@@ -39,7 +39,7 @@ function Run-BolleringBandStrategy {
             $lastNminutesOfData = $csvData | Where-Object { $_.DateTime -ge $currentTime.AddMinutes(-10) }
             $earliestRecord = ($lastNminutesOfData | Sort-Object DateTime | Select-Object -First 1).DateTime
             Write-Host "Earlist record = $($earliestRecord)"
-            
+            $earliestRecord | gm
             # Check if the earliest record is actually 10 minutes old
             while ($earliestRecord -gt $currentTime.AddMinutes(-10)) {
                 # Don't have 10mins of data yet, wait 30 seconds and retry. Easy loop, the earliest record never changes
