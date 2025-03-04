@@ -69,8 +69,7 @@ function Run-BolleringBandStrategy {
             $tempCsvFilePath = "$logFolder\temp\$csvFileName"
             Write-Host "csv file path = $($tempCsvFilePath)"
             $lastNminutesOfData | Export-Csv -Path $tempCsvFilePath -NoTypeInformation
-            Write-Host "New data saved to: $tempCsvFilePath" -ForegroundColor Cyan
-        
+                    
             # Calculate best Bollinger Bands paramaters
             $gridResults = Run-BollingerBandsGridSearch -CsvFile $tempCsvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05 -Silent $true
             $gridResults = $gridResults | Sort-Object -Descending TotalROI
