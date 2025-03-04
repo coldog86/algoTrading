@@ -54,7 +54,9 @@ function Run-BolleringBandStrategy {
             
             $latestRecord = ($lastNminutesOfData | Sort-Object DateTime | Select-Object -Last 1).DateTime
 
-            Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green
+            if($i -le 6){ # Only write this on the first iteration
+                Write-Host "At least 10 minutes of data available. Proceeding..." -ForegroundColor Green
+            }
             # Get the data again to ensure we have latest full 10mins
             $csvData = Import-Csv -Path "$logFolder\$tokenName.csv"
             $csvData = $csvData | ForEach-Object { $_ | Add-Member -PassThru -MemberType NoteProperty -Name DateTime -Value ([datetime]$_.Timestamp) } # Convert timestamp to DateTime
