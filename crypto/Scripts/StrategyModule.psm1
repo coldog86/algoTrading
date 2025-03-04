@@ -73,6 +73,7 @@ function Run-BolleringBandStrategy {
             $gridResults = Run-BollingerBandsGridSearch -CsvFile $tempCsvFilePath -RollingWindows @(15, 20, 25, 30, 35, 40, 45, 50) -StdMultipliers @(1.5, 2.0, 2.5, 3, 3.5, 4) -Slippage 0.05 -Silent $true
             $gridResults = $gridResults | Sort-Object -Descending TotalROI
             $bollingerBandParameters = $gridResults[0]
+            Write-Host $bollingerBandParameters -ForegroundColor Magenta -BackgroundColor Black
         }
 
         # Extract price data
@@ -247,24 +248,23 @@ function Test-BollingerBands {
     $totalROI = (($balance - $initialBalance) / $initialBalance) * 100
     $sumROI = ($roiList | Measure-Object -Sum).Sum
 
+    # Display trade log
+    if($showTradeLog){
+        Write-Host "`n--- Trade Log ---" -ForegroundColor Cyan -BackgroundColor Black
+        $tradeLog | ForEach-Object { Write-Host $_ }
+    }
+
+    # Display resultsif($totalROI -lt 0){
+    if($totalROI -lt 0){
+        $color = 'Red'
+    }
+    if($totalROI -gt 0){
+        $color = 'Green'
+    }
+    if($tradeLog.Count -eq 0){
+        $color = 'Yellow'
+    }
     if(!$silent){
-
-        # Display trade log
-        if($showTradeLog){
-            Write-Host "`n--- Trade Log ---" -ForegroundColor Cyan -BackgroundColor Black
-            $tradeLog | ForEach-Object { Write-Host $_ }
-        }
-
-        # Display resultsif($totalROI -lt 0){
-            if($totalROI -lt 0){
-                $color = 'Red'
-            }
-            if($totalROI -gt 0){
-                $color = 'Green'
-            }
-            if($tradeLog.Count -eq 0){
-                $color = 'Yellow'
-            }
         Write-Host "--- $($CsvFileName) --- Window=$($rollingWindow)/SDmultiplier=$($stdMultiplier)   ---" -ForegroundColor $color -BackgroundColor Black
         if(!($silent)){
             Write-Host "Slippage = $($slippage)" -ForegroundColor Cyan 
