@@ -84,7 +84,7 @@ function Run-BolleringBandStrategy {
         # Run the actual strategy on our temp data with the parameters we calculated from the grid search
         $result = Calculate-BollingerBandsParameters -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         if($i % 6 -eq 0){
-            Write-Host " | Low: $($result.LowerBand) | High: $($result.UpperBand)" -ForegroundColor Magenta -BackgroundColor Black 
+            Write-Host " | BUY: $($result.LowerBand) | Sell: $($result.UpperBand)" -ForegroundColor Magenta -BackgroundColor Black 
         }
         $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Silent $true
         Write-Host "$(Get-Date -Format 'HH:mm:ss') | $($tokenName) | Price: $currentPrice | Decision: $decision" -ForegroundColor Cyan -NoNewline
