@@ -89,16 +89,8 @@ function Run-BolleringBandStrategy {
         $currentPrice = Get-TokenPrice -TokenCode $tokenCode -TokenIssuer $tokenIssuer -Silent $true
         Write-Host "$(Get-Date -Format 'HH:mm:ss') | $($tokenName) | Price: $currentPrice | Decision: $decision" -ForegroundColor Cyan -NoNewline
         if ($currentPrice -lt $result.LowerBand) {
-            Write-Host "BUY BUY BUY"
-            if(!($null -eq $global:buyTime)){
-                if( Has-nMinutesPassed -InitialTime $global:buyTime -MinutesPassed 1 ){
-                    Write-Host "**** BUY ****" -ForegroundColor Green -BackgroundColor Black
-                    #return "BUY"                
-                }
-                else {
-                    Write-Host "BUY conditions met. Too soon to last buy" -ForegroundColor Yellow
-                }
-            }
+            Write-Host "BUY" -ForegroundColor Green -BackgroundColor Black
+            #return "BUY"                            
         }
         elseif ($currentPrice -gt $result.UpperBand) {
             Write-Host "SELL" -ForegroundColor Red -BackgroundColor Black
