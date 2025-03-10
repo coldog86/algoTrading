@@ -174,7 +174,7 @@ function Fix-CSV {
 }
 function Test-BollingerBands {
     param (        
-        [Parameter(Mandatory = $true)][string] $CsvFile,
+        [Parameter(Mandatory = $true)] $CsvFile,
         [Parameter(Mandatory = $false)][int] $InitialBalance = 100,
         [Parameter(Mandatory = $false)][int] $TradeAmount = 10,
         [Parameter(Mandatory = $false)][float] $slippage = 0.05,
