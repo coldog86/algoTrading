@@ -5,14 +5,15 @@ param(
     [Parameter(Mandatory = $false)][bool] $CollectDataOnly = $false,
     [Parameter(Mandatory = $false)][bool] $Silent = $true,
     [Parameter(Mandatory = $false)][switch] $PullRepoOnly,
-    [Parameter(Mandatory = $false)][switch] $NoWriteBack,
-    [Parameter(Mandatory = $false)][switch] $NoClip,
+    [Parameter(Mandatory = $false)][bool] $RemoveModules = $true,
+    #[Parameter(Mandatory = $false)][switch] $NoWriteBack,
+    #[Parameter(Mandatory = $false)][switch] $NoClip,
     [Parameter(Mandatory = $false)][string[]] $FileNames = @('CryptoModule.psm1', 'StrategyModule.psm1'),
     [Parameter(Mandatory = $false)][switch] $IgnoreInit
 )
 
 Write-Host "Accessing branch: " -NoNewline; Write-Host "$($branch)" -ForegroundColor Green -BackgroundColor Black
-Set-VersionNumber -VersionNumber '0.2.26'
+Set-VersionNumber -VersionNumber '0.2.27'
 $versionNumber = Get-VersionNumber -Silent $true
 Write-Host "Version: " -NoNewline; Write-Host "$($versionNumber)" -ForegroundColor Green -BackgroundColor Black
 
@@ -53,7 +54,9 @@ foreach($fileName in $fileNames){
     } else {
         Write-Host "New $($fileName) is identical to existing module" -ForegroundColor Green
     }
-    Remove-Item -Path .\scripts\$fileName
+    if($removeModules){
+        Remove-Item -Path .\scripts\$fileName
+    }
 }
 
 if($ignoreInit){
