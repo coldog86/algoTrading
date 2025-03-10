@@ -285,7 +285,7 @@ function Test-BollingerBands {
 
 function Run-BollingerBandsGridSearch {
     param (                
-        [Parameter(Mandatory = $true)][string] $CsvFile,
+        [Parameter(Mandatory = $true)] $CsvFile,
         [Parameter(Mandatory = $false)][int[]] $rollingWindows = @(15, 20, 25, 30, 35, 40, 45, 50),
         [Parameter(Mandatory = $false)][float[]] $stdMultipliers = @(1.5, 2.0, 2.5, 3, 3.5, 4),   
         [Parameter(Mandatory = $false)][float] $Slippage = 0.05,
