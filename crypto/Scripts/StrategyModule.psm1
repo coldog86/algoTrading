@@ -82,7 +82,7 @@ function Run-BolleringBandStrategy {
         $priceData = $csvData.Price | ForEach-Object { [double]$_ }
 
         # Run the actual strategy on our temp data with the parameters we calculated from the grid search
-        $result = Calculate-BollingerBandsParameters -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
+        $result = Calculate-BollingerBandsValues -PriceData $priceData -RollingWindow $bollingerBandParameters.RollingWindow -StdMultiplier $bollingerBandParameters.StdMultiplier
         if($i % 6 -eq 0){
             Write-Host " | BUY: $($result.LowerBand) | Sell: $($result.UpperBand)" -ForegroundColor Magenta -BackgroundColor Black 
         }
@@ -108,7 +108,7 @@ function Run-BolleringBandStrategy {
 }
 
 
-function Calculate-BollingerBandsParameters {
+function Calculate-BollingerBandsValues {
     param (
         [Parameter(Mandatory = $true)][array] $PriceData,
         [Parameter(Mandatory = $true)][int] $RollingWindow,
@@ -123,6 +123,8 @@ function Calculate-BollingerBandsParameters {
     $lowerBand = $average - ($StdMultiplier * $stdDev)
 
     return @{
+        RollingWindow = $rollingWindow
+        StdMultiplier = $stdMultiplier
         UpperBand = $upperBand
         LowerBand = $lowerBand
         MovingAverage = $average
@@ -174,7 +176,7 @@ function Fix-CSV {
 }
 function Test-BollingerBands {
     param (        
-        [Parameter(Mandatory = $true)] $CsvFile,
+        [Parameter(Mandatory = $true)] $DataSet,
         [Parameter(Mandatory = $false)][int] $InitialBalance = 100,
         [Parameter(Mandatory = $false)][int] $TradeAmount = 10,
         [Parameter(Mandatory = $false)][float] $slippage = 0.05,
@@ -184,7 +186,7 @@ function Test-BollingerBands {
         [Parameter(Mandatory = $false)][bool] $Silent = $false
     )
 
-    
+    <#
     $a = $CsvFile.Split('\')
     $csvFileName = $a[$a.count-1]    
     $csvFileName = $csvFileName.Split('.')[0]
@@ -193,19 +195,25 @@ function Test-BollingerBands {
     
     # Load price data
     $data = Import-Csv -Path $csvFile -Delimiter ',' | Select-Object -Property timestamp, price
-    
-    # Convert Price column to float
-    $data | ForEach-Object { $_.Price = [double]$_.Price }
+    #>
+
+    # Convert Price column to double
+    $dataSet | ForEach-Object { $_.price = [double]$_.price }
+    $bolleringBandsDataSet = @()
 
     # Compute Moving Average and Standard Deviation for Bollinger Bands
-    $data = @($data)  # Ensure $data is treated as an array
-    for ($i = $rollingWindow; $i -lt $data.Length; $i++) {
-        $subset = $data[($i - $rollingWindow)..$i]
-        $mean = ($subset.Price | Measure-Object -Average).Average
-        $stdDev = [math]::Sqrt(($subset.Price | ForEach-Object { ($_ - $mean) * ($_ - $mean) } | Measure-Object -Sum).Sum / $rollingWindow)
-        $data[$i] | Add-Member -MemberType NoteProperty -Name MovingAvg -Value $mean
-        $data[$i] | Add-Member -MemberType NoteProperty -Name UpperBand -Value ($mean + ($stdMultiplier * $stdDev))
-        $data[$i] | Add-Member -MemberType NoteProperty -Name LowerBand -Value ($mean - ($stdMultiplier * $stdDev))
+    $dataSet = @($dataSet)  # Ensure $data is treated as an array
+    for ($i = 0; $i -lt $dataSet.Length; $i++) {
+        $dataPoint = $dataSet[$i]        
+        $mean = ($dataPoint.Price | Measure-Object -Average).Average
+        $stdDev = [math]::Sqrt(($dataPoint.Price | ForEach-Object { ($_ - $mean) * ($_ - $mean) } | Measure-Object -Sum).Sum / $rollingWindow)
+        
+        $newDataPointObj = [PSCustomObject]@{
+            MovingAvg = $mean
+            UpperBand = ($mean + ($stdMultiplier * $stdDev))
+            LowerBand = ($mean - ($stdMultiplier * $stdDev))
+        }
+        $bolleringBandsDataSet += $newDataPointObj
     }
 
     # Initialize variables for backtest
@@ -216,9 +224,9 @@ function Test-BollingerBands {
 
     # Backtest strategy
     for ($i = $rollingWindow; $i -lt $data.Count; $i++) {
-        $currentPrice = $data[$i].Price
-        $lowerBand = $data[$i].LowerBand
-        $upperBand = $data[$i].UpperBand
+        $currentPrice = $bolleringBandsDataSet[$i].Price
+        $lowerBand = $bolleringBandsDataSet[$i].LowerBand
+        $upperBand = $bolleringBandsDataSet[$i].UpperBand
 
         # Buy condition: Price crosses above the lower Bollinger Band and we do not already hold a position
         if ($currentPrice -lt $lowerBand -and $position -eq 0) {
@@ -242,7 +250,6 @@ function Test-BollingerBands {
 
     # Calculate total ROI
     $totalROI = (($balance - $initialBalance) / $initialBalance) * 100
-    $sumROI = ($roiList | Measure-Object -Sum).Sum
 
     # Display trade log
     if($showTradeLog){
@@ -250,17 +257,12 @@ function Test-BollingerBands {
         $tradeLog | ForEach-Object { Write-Host $_ }
     }
 
-    # Display resultsif($totalROI -lt 0){
-    if($totalROI -lt 0){
-        $color = 'Red'
-    }
-    if($totalROI -gt 0){
-        $color = 'Green'
-    }
-    if($tradeLog.Count -eq 0){
-        $color = 'Yellow'
-    }
+    # Display results
     if(!$silent){
+        if($totalROI -lt 0){ $color = 'Red' }
+        if($totalROI -gt 0){ $color = 'Green' }
+        if($tradeLog.Count -eq 0){ $color = 'Yellow' }
+
         Write-Host "--- $($CsvFileName) --- Window=$($rollingWindow)/SDmultiplier=$($stdMultiplier)   ---" -ForegroundColor $color -BackgroundColor Black
         if(!($silent)){
             Write-Host "Slippage = $($slippage)" -ForegroundColor Cyan 
@@ -285,7 +287,7 @@ function Test-BollingerBands {
 
 function Run-BollingerBandsGridSearch {
     param (                
-        [Parameter(Mandatory = $true)] $CsvFile,
+        [Parameter(Mandatory = $true)] $DataSet,
         [Parameter(Mandatory = $false)][int[]] $rollingWindows = @(15, 20, 25, 30, 35, 40, 45, 50),
         [Parameter(Mandatory = $false)][float[]] $stdMultipliers = @(1.5, 2.0, 2.5, 3, 3.5, 4),   
         [Parameter(Mandatory = $false)][float] $Slippage = 0.05,
@@ -304,7 +306,7 @@ function Run-BollingerBandsGridSearch {
                 Write-Host "Testing rolling window = $($rollingWindow)"
                 Write-Host "Testing stdMultiplier = $($stdMultiplier)"
             }
-            $result = Test-BollingerBands -CsvFile $csvFile -RollingWindow $rollingWindow -StdMultiplier $stdMultiplier -Slippage $slippage -Silent $silent
+            $result = Test-BollingerBands DataSet $data -RollingWindow $rollingWindow -StdMultiplier $stdMultiplier -Slippage $slippage -Silent $silent
 
             # Store results in an object
             $gridResults += [PSCustomObject]@{
