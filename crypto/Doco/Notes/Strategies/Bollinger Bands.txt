@@ -1,0 +1,50 @@
+
+[CHAT GPT]
+combined.csv is a bunch of crypto tokens.  
+Each token name represents a descret token. They can not be traded with each other.
+Create the following strategy: 
+Bollinger Bands strategy: with the following parameters: 
+Rolling window: 50
+Standard deviation multiplier: 6
+apply the following rules:
+Use a fixed outlay of $10 per buy, starting with an opening balance of $100
+Include a rule that Prevent additional buy signals if the strategy already holds the token.
+Factor in a slipage of 5% per trade. 
+Back test the strategy and show me the results, include number of trades, include ROI and total ROI
+Show results to 3 decimal places
+Give me the sum of the individual token's ROIs percentages to calculate the overall ROI
+
+[Strategy]
+Bollinger Bands strategy with the following parameters: 
+Rolling window: 50
+Standard deviation multiplier: 6 
+
+[Rules]
+Use a fixed outlay of $10 per buy, starting with an opening balance of $100
+Include a rule that Prevent additional buy signals if the strategy already holds the token.
+Factor in a slipage of 5% per trade. 
+
+[Action]
+Back test the strategy and show me the results, include number of trades, include ROI and total ROI as a percentage
+Show results to 3 decimal places
+Give me the sum of the individual token's ROIs percentages to calculate the overall ROI
+
+[Bollinger Bands ROI]
+Rolling window: 50
+Standard deviation multiplier: 6 
+    Combined.csv = -24.916%
+    Combined2.csv = -34.789%.
+
+Rolling window: 100
+Standard deviation multiplier: 4 
+    Combined.csv = -10.063%
+
+Rolling window: 120
+Standard deviation multiplier: 4 
+    Combined.csv = -4.144%
+    Combined2.csv = -5.113%
+    
+Rolling window: 150
+Standard deviation multiplier: 4 
+    Combined.csv = -2.008%
+    Combined2.csv = -26.375%

@@ -1,18 +1,19 @@
 	[SHORT TERM]
-* Release to Kris
 * Fix slipage 
 * Config writeback
 * Release to others
 * Get dev balance
 * Get number of holders
+* Fix logging
+* Look at tightening stops up as the volatility changes
 
 
 	[MEDIUM TERM]
-* A GUI user interface
+* Turn standard indicators into buy/sell stratergies to apply to more stable coins. 
 * Improve doco and onboarding experiance 
 * Investigate 'confidence levels' for varing buyin amounts
-* Add modes (aggressive, safe, conservative)
 
 
 	[LONG TERM]
-* Turn standard indicators into buy/sell stratergies to apply to more stable coins. 
+* A GUI user interface
+* Add modes (aggressive, safe, conservative)

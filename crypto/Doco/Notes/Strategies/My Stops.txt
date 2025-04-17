@@ -1,0 +1,25 @@
+Attached is a CSV of a bunch of XRP tokens. My current strategy is outlined below. Give me a summary of performance. How many tokens were assessed? How many were bought? If bought, at what stop were they sold? What was the return?
+
+Buy logic: 
+If the price doubles in within the first 15 mins buy it is purchased immediately.  
+A token will only be bought once
+
+Stop 1 = buy price was between 15% and 150%
+Stop 2 = buy price was between 25% and 180%
+Stop 3 = buy price was between 40% and 200%
+Stop 4 = buy price was between 55% and 225%
+Stop 5 = buy price was between 110% and 300%
+Stop 6 = buy price was between 175% and 390%
+Stop 7 = buy price was between 295% and 500%
+Stop 8 = buy price was between 400% and 600%
+Stop 9 = buy price was between 500% and 700%
+Stop 10 = buy price was between 600% and 800%
+Stop 11 = buy price was between 700% and 900%
+
+Stop Logic:
+As the token price rises and exceeds a stop's upper limit, the lower limit of the next stop becomes the new sell threshold.
+If the price falls below the current stop's lower limit, sell the token.
+Tokens can only enter a stop once. The token either progresses to the next stop by surpassing the current stop's upper limit or is sold when it falls below the current stop's lower limit.
+If the price exceeds the final stop's upper limit, sell automatically at that level.
+
+
